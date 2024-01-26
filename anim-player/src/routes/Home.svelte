@@ -3,6 +3,7 @@
 	import { onDestroy, onMount } from "svelte";
 	import * as THREE from "three";
 	import ThreeScene from "../lib/ThreeScene";
+	import { loadFBX, loadBVH } from "../utils/ropes";
 
 	/** @type {HTMLCanvasElement} */
 	let canvas;
@@ -16,6 +17,8 @@
 	let anim_action;
 
 	let animation_pointer = 0;
+
+	export let name;
 
 	const clock = new THREE.Clock();
 

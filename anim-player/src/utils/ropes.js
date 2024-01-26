@@ -1,6 +1,21 @@
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { FBXLoader } from "three/examples/jsm/loaders/FBXLoader";
 import { OBJLoader } from "three/examples/jsm/loaders/OBJLoader.js";
+import { BVHLoader } from "three/examples/jsm/loaders/BVHLoader.js";
+
+export function loadBVH (url) {
+    return new Promise((resolve) => {
+        const loader = new BVHLoader();
+        loader.load(url,
+            (result) => resolve(result),
+            (xhr) => {
+                console.log((xhr.loaded / xhr.total) * 100 + "% loaded");
+            },
+            (error) => {
+                console.log(error);
+            });
+    });
+}
 
 export function loadGLTF (url) {
     return new Promise((resolve) => {
