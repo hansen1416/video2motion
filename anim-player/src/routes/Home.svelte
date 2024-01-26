@@ -40,6 +40,13 @@
 			document.documentElement.clientHeight,
 		);
 
+		Promise.all([
+			loadFBX("/public/x_bot.fbx"),
+			loadFBX("/public/y_bot.fbx"),
+		]).then(([x_bot, y_bot]) => {
+			console.log(x_bot, y_bot);
+		});
+
 		animate();
 	});
 
