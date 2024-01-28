@@ -2,6 +2,7 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { FBXLoader } from "three/examples/jsm/loaders/FBXLoader";
 import { OBJLoader } from "three/examples/jsm/loaders/OBJLoader.js";
 import { BVHLoader } from "three/examples/jsm/loaders/BVHLoader.js";
+// import BVHLoader from "../lib/bvhloader.js";
 
 export function loadBVH (url) {
     return new Promise((resolve) => {
