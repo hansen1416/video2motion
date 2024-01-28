@@ -20,6 +20,7 @@
   },
   "type": "module",
   "dependencies": {
+    "axios": "^1.6.7",
     "lodash": "^4.17.21",
     "three": "^0.158.0"
   }

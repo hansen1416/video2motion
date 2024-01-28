@@ -1,5 +1,6 @@
 <script>
 	import _ from "lodash";
+	import axios from "axios";
 	import { onDestroy, onMount } from "svelte";
 	import * as THREE from "three";
 	import ThreeScene from "../lib/ThreeScene";
@@ -44,7 +45,8 @@
 		Promise.all([
 			loadJSON(`/filenames.json`),
 			loadFBX(`/fbx/x_bot.fbx`),
-		]).then(([filenames, xbot]) => {
+			loadJSON(`/180 Turn W_ Briefcase (1).json`),
+		]).then(([filenames, xbot, test_anim]) => {
 			anim_mixer = new THREE.AnimationMixer(xbot);
 
 			threeScene.scene.add(xbot);
@@ -54,21 +56,35 @@
 					const filename = filenames[i];
 					const fbx_model = await loadFBX(`/mixamo-fbx/${filename}`);
 
-					console.log(fbx_model.animations[0]);
+					const anim_json = fbx_model.animations[0].toJSON();
 
-					anim_action = anim_mixer.clipAction(
-						fbx_model.animations[0],
+					const headers = {
+						"Content-Type": "application/json",
+					};
+
+					const reponse = await axios.post(
+						"http://localhost:2020",
+						{ data: anim_json, name: filename.replace(".fbx", "") },
+						headers,
 					);
 
-					anim_action.reset();
-					anim_action.setLoop(THREE.LoopRepeat, 3);
-					// keep model at the position where it stops
-					anim_action.clampWhenFinished = true;
-					anim_action.enabled = true;
-					// anim_action.fadeIn(0.5);
-					anim_action.play();
+					console.log(reponse.data.message);
 
-					break;
+					// // console.log(fbx_model.animations[0]);
+					// // const clip = fbx_model.animations[0]
+					// const clip = THREE.AnimationClip.parse(anim_json);
+
+					// anim_action = anim_mixer.clipAction(clip);
+
+					// anim_action.reset();
+					// anim_action.setLoop(THREE.LoopRepeat, 3);
+					// // keep model at the position where it stops
+					// anim_action.clampWhenFinished = true;
+					// anim_action.enabled = true;
+					// // anim_action.fadeIn(0.5);
+					// anim_action.play();
+
+					// break;
 				}
 			})();
 		});
