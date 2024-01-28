@@ -50,7 +50,27 @@
 			loadFBX(`/fbx-None-Keyframe-Reduction_2/${anim}.fbx`),
 			loadFBX(`/fbx-unity-t-pose-non-reduct/${anim}.fbx`),
 			loadBVH(`/bvh_t_pose/${anim}.bvh`),
-		]).then(([fbx_model, fbx2, fbx1, bvh_data1]) => {
+			loadFBX(`/mixamo-fbx/Aiming Gun.fbx`),
+		]).then(([fbx_model, fbx2, fbx1, bvh_data1, fbx3]) => {
+			anim_mixer = new THREE.AnimationMixer(fbx_model);
+			// console.log(fbx_unity_anim);
+			threeScene.scene.add(fbx_model);
+
+			const clip1 = fbx3.animations[0];
+
+			console.log(clip1.toJSON());
+
+			anim_action = anim_mixer.clipAction(clip1);
+			anim_action.reset();
+			anim_action.setLoop(THREE.LoopRepeat);
+			// keep model at the position where it stops
+			anim_action.clampWhenFinished = true;
+			anim_action.enabled = true;
+			// anim_action.fadeIn(0.5);
+			anim_action.play();
+
+			return;
+
 			console.log("fbx_model", fbx_model);
 
 			// fbx1.children.push(fbx_model.children[1]);

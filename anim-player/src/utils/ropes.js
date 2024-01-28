@@ -1,5 +1,5 @@
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
-import { FBXLoader } from "three/examples/jsm/loaders/FBXLoader";
+import { FBXLoader } from "three/examples/jsm/loaders/FBXLoader.js";
 import { OBJLoader } from "three/examples/jsm/loaders/OBJLoader.js";
 import { BVHLoader } from "three/examples/jsm/loaders/BVHLoader.js";
 // import BVHLoader from "../lib/bvhloader.js";
