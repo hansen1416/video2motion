@@ -21,8 +21,12 @@
 
 	const clock = new THREE.Clock();
 
+	let show_done = false;
+
 	export let model;
 	export let anim;
+
+	anim = decodeURIComponent(anim);
 
 	function animate() {
 		if (anim_mixer && anim_action) {
@@ -57,12 +61,14 @@
 
 			anim_action = anim_mixer.clipAction(clip);
 			anim_action.reset();
-			anim_action.setLoop(THREE.LoopRepeat);
+			anim_action.setLoop(THREE.LoopRepeat, 1);
 			// keep model at the position where it stops
 			anim_action.clampWhenFinished = true;
 			anim_action.enabled = true;
 			// anim_action.fadeIn(0.5);
 			anim_action.play();
+
+			show_done = true;
 		});
 
 		animate();
@@ -79,6 +85,10 @@
 <section>
 	<canvas bind:this={canvas} />
 </section>
+
+{#if show_done}
+	<div id="done">Done</div>
+{/if}
 
 <style>
 	canvas {
