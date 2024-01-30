@@ -28,6 +28,21 @@ function getFileNames (directoryPath) {
     return files;
 }
 
+function get_longest_track (tracks) {
+    let max_len = 0;
+    let max_name = '';
+
+    for (const v of tracks) {
+
+        if (v.times.length > max_len) {
+            max_len = v.times.length
+            max_name = v.name
+        }
+    }
+
+    return [max_name, max_len]
+}
+
 (async () => {
 
     // models to request
@@ -39,7 +54,6 @@ function getFileNames (directoryPath) {
 
     const interval = 1 / 30
 
-
     const browser = await puppeteer.launch();
     const page = await browser.newPage();
 
@@ -48,26 +62,32 @@ function getFileNames (directoryPath) {
             // read the json file
             const animation_data = JSON.parse(fs.readFileSync(path.join(animation_dir, anim_name), 'utf8'));
 
+            const lengest_track = get_longest_track(animation_data.tracks)
+
+            console.log(lengest_track)
+
+            // break
+
             // calculate the total time steps
             // todo read this value from the json file. find the largest time step
-            const total_time_steps = Math.ceil(animation_data.duration / interval)
+            // const total_time_steps = Math.ceil(animation_data.duration / interval)
 
-            let current_time_step = 0
+            // let current_time_step = 0
 
-            // request the animation at each time step
-            while (current_time_step < total_time_steps) {
-                // request the animation
-                const url = `http://localhost:5173/${encodeURIComponent(model_name)}/${encodeURIComponent(anim_name)}/${current_time_step}`
+            // // request the animation at each time step
+            // while (current_time_step < total_time_steps) {
+            //     // request the animation
+            //     const url = `http://localhost:5173/${encodeURIComponent(model_name)}/${encodeURIComponent(anim_name)}/${current_time_step}`
 
-                await page.goto(url);
+            //     console.log(url)
+
+            //     await page.goto(url);
 
 
-                await page.screenshot({ path: 'example.png' });
+            //     await page.screenshot({ path: 'example.png' });
 
-                current_time_step++
-            }
-
-            break
+            //     current_time_step++
+            // }
         }
     }
 
