@@ -51,10 +51,10 @@ function get_longest_track (tracks) {
     const animation_dir = path.join('..', 'anim-player', 'public', 'anim-json')
     const animatiom_names = getFileNames(animation_dir)
 
-
     const interval = 1 / 30
 
     const browser = await puppeteer.launch();
+
     const page = await browser.newPage();
 
     for (let model_name of model_names) {
@@ -64,30 +64,41 @@ function get_longest_track (tracks) {
 
             const lengest_track = get_longest_track(animation_data.tracks)
 
-            console.log(lengest_track)
+            let current_time_step = 0
 
-            // break
+            while (current_time_step < lengest_track[1]) {
+                // request the animation at each time step
 
-            // calculate the total time steps
-            // todo read this value from the json file. find the largest time step
-            // const total_time_steps = Math.ceil(animation_data.duration / interval)
+                // request the animation
+                const url = `http://localhost:5173/${encodeURIComponent(model_name)}/${encodeURIComponent(anim_name)}/${current_time_step}`
 
-            // let current_time_step = 0
+                await page.goto(url);
 
-            // // request the animation at each time step
-            // while (current_time_step < total_time_steps) {
-            //     // request the animation
-            //     const url = `http://localhost:5173/${encodeURIComponent(model_name)}/${encodeURIComponent(anim_name)}/${current_time_step}`
+                const folder_name = path.join('data', model_name, anim_name)
 
-            //     console.log(url)
+                try {
+                    fs.mkdirSync(folder_name, { recursive: true });
+                    // console.log(`Folder ${folder_name} created successfully`);
+                } catch (err) {
+                    if (err.code === 'EEXIST') {
+                        console.log('Folder already exists');
+                    } else {
+                        console.error('Error creating folder:', err);
+                    }
+                }
 
-            //     await page.goto(url);
+                const filename = path.join(folder_name, `${current_time_step}.png`)
 
+                await page.waitForSelector('#done', { visible: true })
 
-            //     await page.screenshot({ path: 'example.png' });
+                console.log(`Saving ${filename}`)
 
-            //     current_time_step++
-            // }
+                await page.screenshot({ path: filename });
+
+                current_time_step++
+            }
+
+            break
         }
     }
 

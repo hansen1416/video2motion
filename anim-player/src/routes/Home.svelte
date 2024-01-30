@@ -23,8 +23,12 @@
 
 	let show_done = false;
 
+	// model file name
 	export let model;
+	// animation file name
 	export let anim;
+	// animation step of the longest track
+	export let step;
 
 	anim = decodeURIComponent(anim);
 
@@ -39,6 +43,20 @@
 		animation_pointer = requestAnimationFrame(animate);
 	}
 
+	function get_longest_track(tracks) {
+		let max_len = 0;
+		let max_times = [];
+
+		for (const v of tracks) {
+			if (v.times.length > max_len) {
+				max_len = v.times.length;
+				max_times = v.times;
+			}
+		}
+
+		return max_times;
+	}
+
 	onMount(() => {
 		threeScene = new ThreeScene(
 			canvas,
@@ -50,8 +68,8 @@
 		threeScene.scene.position.set(0, -50, 0);
 
 		Promise.all([
-			loadFBX(`/fbx/${model}.fbx`),
-			loadJSON(`/anim-json/${anim}.json`),
+			loadFBX(`/fbx/${model}`),
+			loadJSON(`/anim-json/${anim}`),
 		]).then(([fbx_model, anim_data]) => {
 			anim_mixer = new THREE.AnimationMixer(fbx_model);
 			// console.log(fbx_unity_anim);
@@ -66,7 +84,16 @@
 			anim_action.clampWhenFinished = true;
 			anim_action.enabled = true;
 			// anim_action.fadeIn(0.5);
+
+			anim_action.paused = true;
+
 			anim_action.play();
+
+			const max_times = get_longest_track(clip.tracks);
+
+			const max_delta = max_times[step];
+
+			anim_action.time = max_delta;
 
 			show_done = true;
 		});
