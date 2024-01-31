@@ -1,4 +1,8 @@
 <script>
+	/**
+	 * load all animation fbx files, and send animation clip json to "http://localhost:2020"
+	 * which is a nodejs server, where the json files will be saved
+	 */
 	import _ from "lodash";
 	import axios from "axios";
 	import { onDestroy, onMount } from "svelte";

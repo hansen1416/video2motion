@@ -7,6 +7,8 @@ export const SceneProperties = {
 	camera_far_z: 240,
 };
 
+const CameraOffset = new THREE.Vector3(0, 0, 240);
+
 Object.freeze(SceneProperties);
 
 let instance;
@@ -107,7 +109,10 @@ export default class ThreeScene {
 	}
 
 	onFrameUpdate (stats) {
-		this.controls.update();
+
+		// this.followTarget(0, 270);
+
+		// this.controls.update();
 
 		this.renderer.render(this.scene, this.camera);
 
@@ -118,6 +123,28 @@ export default class ThreeScene {
 
 	resetControl () {
 		this.controls.reset();
+	}
+
+	followTarget (elevation = 0, azimuth = 0) {
+		// NOTE Assuming the camera is direct child of the Scene
+		const object_position = new THREE.Vector3();
+		const diva = this.scene.getObjectByName("diva");
+
+		if (!diva) {
+			return;
+		}
+
+		diva.children[0].getWorldPosition(object_position)
+
+		CameraOffset.x = Math.sin(MathUtils.degToRad(azimuth)) * 240;
+		CameraOffset.y = Math.sin(MathUtils.degToRad(elevation)) * 240;
+		CameraOffset.z = Math.cos(MathUtils.degToRad(azimuth)) * 240;
+
+		const target_pos = new THREE.Vector3().addVectors(object_position, CameraOffset);
+
+		this.camera.position.set(target_pos.x, target_pos.y, target_pos.z);
+
+		this.camera.lookAt(object_position);
 	}
 
 	setCamera (target, elevation, azimuth) {

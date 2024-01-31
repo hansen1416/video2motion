@@ -20,22 +20,6 @@
 
 	const clock = new THREE.Clock();
 
-	let anim_played = false;
-	let show_done = false;
-
-	// model file name
-	export let model;
-	// animation file name
-	export let anim;
-	// animation step of the longest track
-	export let step;
-
-	export let azimuth;
-
-	export let elevation;
-
-	anim = decodeURIComponent(anim);
-
 	function animate() {
 		if (anim_mixer && anim_action) {
 			anim_mixer.update(clock.getDelta());
@@ -44,27 +28,7 @@
 		// update physics world and threejs renderer
 		threeScene.onFrameUpdate();
 
-		threeScene.followTarget(elevation, azimuth);
-
-		if (anim_played) {
-			show_done = true;
-		}
-
 		animation_pointer = requestAnimationFrame(animate);
-	}
-
-	function get_longest_track(tracks) {
-		let max_len = 0;
-		let max_times = [];
-
-		for (const v of tracks) {
-			if (v.times.length > max_len) {
-				max_len = v.times.length;
-				max_times = v.times;
-			}
-		}
-
-		return max_times;
 	}
 
 	onMount(() => {
@@ -78,8 +42,8 @@
 		threeScene.scene.position.set(0, -150, 0);
 
 		Promise.all([
-			loadFBX(`/fbx/${model}`),
-			loadJSON(`/anim-json/${anim}`),
+			loadFBX(`/fbx/x_bot.fbx`),
+			loadJSON(`/anim-json//Jumping (9).json`),
 		]).then(([fbx_model, anim_data]) => {
 			fbx_model.name = "diva";
 
@@ -91,25 +55,14 @@
 
 			anim_action = anim_mixer.clipAction(clip);
 			anim_action.reset();
-			anim_action.setLoop(THREE.LoopRepeat, 1);
+			anim_action.setLoop(THREE.LoopRepeat);
 			// keep model at the position where it stops
 			anim_action.clampWhenFinished = true;
 			anim_action.enabled = true;
-			// anim_action.fadeIn(0.5);
 
-			anim_action.paused = true;
+			anim_action.paused = false;
 
 			anim_action.play();
-
-			// threeScene.setCamera(fbx_model, elevation, azimuth);
-
-			const max_times = get_longest_track(clip.tracks);
-
-			const max_delta = max_times[step];
-
-			anim_action.time = max_delta;
-
-			anim_played = true;
 		});
 
 		animate();
@@ -126,10 +79,6 @@
 <section>
 	<canvas bind:this={canvas} />
 </section>
-
-{#if show_done}
-	<div id="done">Done</div>
-{/if}
 
 <style>
 	canvas {

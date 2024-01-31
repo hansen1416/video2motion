@@ -2,6 +2,7 @@
 	import { Router, Route } from "svelte-routing";
 	import Home from "./routes/Home.svelte";
 	import Loader from "./routes/Loader.svelte";
+	import Camera from "./routes/Camera.svelte";
 </script>
 
 <Router>
@@ -16,5 +17,6 @@
 			/>
 		</Route>
 		<Route path="/" component={Loader} />
+		<Route path="/camera" component={Camera} />
 	</div>
 </Router>
