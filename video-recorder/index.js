@@ -51,7 +51,8 @@ function get_longest_track (tracks) {
     const animation_dir = path.join('..', 'anim-player', 'public', 'anim-json')
     const animatiom_names = getFileNames(animation_dir)
 
-    const interval = 1 / 30
+    // sort `animatiom_names` alphabetically
+    animatiom_names.sort()
 
     const browser = await puppeteer.launch();
 
@@ -62,36 +63,43 @@ function get_longest_track (tracks) {
             // read the json file
             const animation_data = JSON.parse(fs.readFileSync(path.join(animation_dir, anim_name), 'utf8'));
 
-            const lengest_track = get_longest_track(animation_data.tracks)
+            const folder_name = path.join('data', model_name, anim_name);
 
-            let current_time_step = 0
+            try {
+
+                if (fs.existsSync(folder_name)) {
+                    console.log(`Folder ${folder_name} already exists, skipping`)
+                    continue;
+                }
+
+                fs.mkdirSync(folder_name, { recursive: true });
+                // console.log(`Folder ${folder_name} created successfully`);
+            } catch (err) {
+                if (err.code === 'EEXIST') {
+                    console.log('Folder already exists');
+                } else {
+                    console.error('Error creating folder:', err);
+                }
+            }
+
+            const lengest_track = get_longest_track(animation_data.tracks);
+
+            let current_time_step = 0;
 
             while (current_time_step < lengest_track[1]) {
-                // request the animation at each time step
 
-                // request the animation
-                const url = `http://localhost:5173/${encodeURIComponent(model_name)}/${encodeURIComponent(anim_name)}/${current_time_step}`
+                // request the animation at each time step
+                const url = `http://localhost:5173/${encodeURIComponent(model_name)}/${encodeURIComponent(anim_name)}/${current_time_step}`;
+
+                console.log(`Request to ${url}`);
 
                 await page.goto(url);
 
-                const folder_name = path.join('data', model_name, anim_name)
+                await page.waitForSelector('#done', { visible: true });
 
-                try {
-                    fs.mkdirSync(folder_name, { recursive: true });
-                    // console.log(`Folder ${folder_name} created successfully`);
-                } catch (err) {
-                    if (err.code === 'EEXIST') {
-                        console.log('Folder already exists');
-                    } else {
-                        console.error('Error creating folder:', err);
-                    }
-                }
+                const filename = path.join(folder_name, `${current_time_step}.png`);
 
-                const filename = path.join(folder_name, `${current_time_step}.png`)
-
-                await page.waitForSelector('#done', { visible: true })
-
-                console.log(`Saving ${filename}`)
+                console.log(`Saving ${filename}`);
 
                 await page.screenshot({ path: filename });
 
