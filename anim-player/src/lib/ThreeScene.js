@@ -1,9 +1,10 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
+import { MathUtils } from "three/src/math/MathUtils.js";
 
 export const SceneProperties = {
 	camera_height: 0,
-	camera_far_z: 200,
+	camera_far_z: 240,
 };
 
 Object.freeze(SceneProperties);
@@ -117,6 +118,28 @@ export default class ThreeScene {
 
 	resetControl () {
 		this.controls.reset();
+	}
+
+	setCamera (target, elevation, azimuth) {
+		// Create a Spherical object and assign it the internal values of OrbitControls.
+		const spherical = new THREE.Spherical();
+
+		// set Spherical position
+		// spherical.position.set(position);
+
+
+		// Set the new values on the Spherical object.
+		spherical.radius = SceneProperties.camera_far_z;
+		spherical.phi = MathUtils.degToRad(elevation);
+		spherical.theta = MathUtils.degToRad(azimuth);
+
+		// Update the camera position.
+		this.camera.position.setFromSpherical(spherical);
+
+		this.camera.position.x += target.position.x;
+		this.camera.position.y += target.position.y;
+
+		this.camera.lookAt(target.position);
 	}
 
 	/**

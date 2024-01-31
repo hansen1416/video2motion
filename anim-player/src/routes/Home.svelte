@@ -4,7 +4,6 @@
 	import * as THREE from "three";
 	import ThreeScene from "../lib/ThreeScene";
 	import { loadFBX, loadJSON } from "../utils/ropes";
-	import * as SkeletonUtils from "three/addons/utils/SkeletonUtils.js";
 
 	/** @type {HTMLCanvasElement} */
 	let canvas;
@@ -29,6 +28,10 @@
 	export let anim;
 	// animation step of the longest track
 	export let step;
+
+	export let azimuth;
+
+	export let elevation;
 
 	anim = decodeURIComponent(anim);
 
@@ -88,6 +91,8 @@
 			anim_action.paused = true;
 
 			anim_action.play();
+
+			threeScene.setCamera(fbx_model, elevation, azimuth);
 
 			const max_times = get_longest_track(clip.tracks);
 

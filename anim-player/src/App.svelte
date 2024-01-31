@@ -6,8 +6,14 @@
 
 <Router>
 	<div>
-		<Route path="/:model/:anim/:step" let:params>
-			<Home model={params.model} anim={params.anim} step={params.step} />
+		<Route path="/:model/:anim/:step/:elevation/:azimuth" let:params>
+			<Home
+				model={params.model}
+				anim={params.anim}
+				step={params.step}
+				elevation={params.elevation}
+				azimuth={params.azimuth}
+			/>
 		</Route>
 		<Route path="/" component={Loader} />
 	</div>

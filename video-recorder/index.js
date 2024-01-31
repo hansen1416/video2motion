@@ -51,6 +51,9 @@ function get_longest_track (tracks) {
     const animation_dir = path.join('..', 'anim-player', 'public', 'anim-json')
     const animatiom_names = getFileNames(animation_dir)
 
+    const elevation = [60, 90, 120];
+    const azimuth = [0, 45, 90, 135, 180, 225, 270, 315];
+
     // sort `animatiom_names` alphabetically
     animatiom_names.sort()
 
@@ -60,53 +63,57 @@ function get_longest_track (tracks) {
 
     for (let model_name of model_names) {
         for (let anim_name of animatiom_names) {
-            // read the json file
-            const animation_data = JSON.parse(fs.readFileSync(path.join(animation_dir, anim_name), 'utf8'));
+            for (let elev of elevation) {
+                for (let azim of azimuth) {
+                    // read the json file
+                    const animation_data = JSON.parse(fs.readFileSync(path.join(animation_dir, anim_name), 'utf8'));
 
-            const folder_name = path.join('data', model_name, anim_name);
+                    const folder_name = path.join('data', model_name, anim_name, elev + '', azim + '');
 
-            try {
+                    try {
 
-                if (fs.existsSync(folder_name)) {
-                    console.log(`Folder ${folder_name} already exists, skipping`)
-                    continue;
-                }
+                        if (fs.existsSync(folder_name)) {
+                            console.log(`Folder ${folder_name} already exists, skipping`)
+                            continue;
+                        }
 
-                fs.mkdirSync(folder_name, { recursive: true });
-                // console.log(`Folder ${folder_name} created successfully`);
-            } catch (err) {
-                if (err.code === 'EEXIST') {
-                    console.log('Folder already exists');
-                } else {
-                    console.error('Error creating folder:', err);
+                        fs.mkdirSync(folder_name, { recursive: true });
+                        // console.log(`Folder ${folder_name} created successfully`);
+                    } catch (err) {
+                        if (err.code === 'EEXIST') {
+                            console.log('Folder already exists');
+                        } else {
+                            console.error('Error creating folder:', err);
+                        }
+                    }
+
+                    const lengest_track = get_longest_track(animation_data.tracks);
+
+                    let current_time_step = 0;
+
+                    while (current_time_step < lengest_track[1]) {
+
+                        // request the animation at each time step
+                        const url = `http://localhost:5173/${encodeURIComponent(model_name)}/${encodeURIComponent(anim_name)}/${encodeURIComponent(current_time_step)}/${encodeURIComponent(elev)}/${encodeURIComponent(azim)}`;
+
+                        console.log(`Request to ${url}`);
+
+                        await page.goto(url);
+
+                        await page.waitForSelector('#done', { visible: true });
+
+                        const filename = path.join(folder_name, `${current_time_step}.png`);
+
+                        console.log(`Saving ${filename}`);
+
+                        await page.screenshot({ path: filename });
+
+                        current_time_step++
+                    }
+
+                    break
                 }
             }
-
-            const lengest_track = get_longest_track(animation_data.tracks);
-
-            let current_time_step = 0;
-
-            while (current_time_step < lengest_track[1]) {
-
-                // request the animation at each time step
-                const url = `http://localhost:5173/${encodeURIComponent(model_name)}/${encodeURIComponent(anim_name)}/${current_time_step}`;
-
-                console.log(`Request to ${url}`);
-
-                await page.goto(url);
-
-                await page.waitForSelector('#done', { visible: true });
-
-                const filename = path.join(folder_name, `${current_time_step}.png`);
-
-                console.log(`Saving ${filename}`);
-
-                await page.screenshot({ path: filename });
-
-                current_time_step++
-            }
-
-            break
         }
     }
 
