@@ -51,19 +51,22 @@ function get_longest_track (tracks) {
     const animation_dir = path.join('..', 'anim-player', 'public', 'anim-json')
     const animatiom_names = getFileNames(animation_dir)
 
-    const elevation = [60, 90, 120];
+    // const elevation = [60, 90, 120];
+    // const azimuth = [0, 45, 90, 135, 180, 225, 270, 315];
+    const elevation = [90];
     const azimuth = [0, 45, 90, 135, 180, 225, 270, 315];
 
     // sort `animatiom_names` alphabetically
     animatiom_names.sort()
 
-    const browser = await puppeteer.launch();
-
-    const page = await browser.newPage();
-
     for (let model_name of model_names) {
         for (let anim_name of animatiom_names) {
             for (let elev of elevation) {
+
+                const browser = await puppeteer.launch();
+
+                const page = await browser.newPage();
+
                 for (let azim of azimuth) {
                     // read the json file
                     const animation_data = JSON.parse(fs.readFileSync(path.join(animation_dir, anim_name), 'utf8'));
@@ -72,12 +75,10 @@ function get_longest_track (tracks) {
 
                     try {
 
-                        if (fs.existsSync(folder_name)) {
-                            console.log(`Folder ${folder_name} already exists, skipping`)
-                            continue;
+                        if (!fs.existsSync(folder_name)) {
+                            fs.mkdirSync(folder_name, { recursive: true });
                         }
 
-                        fs.mkdirSync(folder_name, { recursive: true });
                         // console.log(`Folder ${folder_name} created successfully`);
                     } catch (err) {
                         if (err.code === 'EEXIST') {
@@ -93,6 +94,15 @@ function get_longest_track (tracks) {
 
                     while (current_time_step < lengest_track[1]) {
 
+                        const filename = path.join(folder_name, `${current_time_step}.png`);
+
+                        // check if file already exists
+                        if (fs.existsSync(filename)) {
+                            console.log(`File ${filename} already exists`);
+                            current_time_step++;
+                            continue;
+                        }
+
                         // request the animation at each time step
                         const url = `http://localhost:5173/${encodeURIComponent(model_name)}/${encodeURIComponent(anim_name)}/${encodeURIComponent(current_time_step)}/${encodeURIComponent(elev)}/${encodeURIComponent(azim)}`;
 
@@ -102,20 +112,22 @@ function get_longest_track (tracks) {
 
                         await page.waitForSelector('#done', { visible: true });
 
-                        const filename = path.join(folder_name, `${current_time_step}.png`);
-
                         console.log(`Saving ${filename}`);
 
                         await page.screenshot({ path: filename });
 
-                        current_time_step++
+                        // 20 frames per second
+                        current_time_step += 3;
                     }
 
-                    break
                 }
+
+                await browser.close();
             }
+
+            break
         }
     }
 
-    await browser.close();
+
 })();
