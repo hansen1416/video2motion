@@ -1,3 +1,4 @@
+import json
 import os
 
 import mediapipe as mp
@@ -14,21 +15,20 @@ source_image_dir = os.path.join(
     os.path.dirname(__file__), "../", "video-recorder", "data"
 )
 
+queue_dir = os.path.join(os.path.dirname(__file__), "../", "video-recorder", "queue")
 
-def traver_folder_recursivly(folder):
-    for root, dirs, files in os.walk(folder):
-        for dir in dirs:
-            traver_folder_recursivly(dir)
+for file in os.listdir(queue_dir):
+    # print(f"Processing {files}")
 
-        for file in files:
-            yield os.path.join(root, file)
+    with open(os.path.join(queue_dir, file)) as f:
+        data = json.load(f)
+
+        print(type(data))
+
+    break
 
 
-# get all the files in the folder
-all_files = traver_folder_recursivly(source_image_dir)
-
-print(list(all_files))
-
+exit()
 
 BaseOptions = mp.tasks.BaseOptions
 PoseLandmarker = mp.tasks.vision.PoseLandmarker
