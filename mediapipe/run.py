@@ -23,7 +23,11 @@ for file in os.listdir(queue_dir):
     with open(os.path.join(queue_dir, file)) as f:
         data = json.load(f)
 
-        print(type(data))
+        for q in data:
+            image_file = os.path.join(source_image_dir, *list(map(str, q)))
+
+            if os.path.isfile(image_file + ".png"):
+                print(f"Processing {image_file}")
 
     break
 
