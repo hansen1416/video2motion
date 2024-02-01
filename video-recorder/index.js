@@ -25,9 +25,7 @@ let counter = 0;
     for (const task of queue_data) {
         // console.log(task)
 
-        const [_model_name, anim_name, elev, azim, current_time_step] = task
-
-        const model_name = 'sophie.fbx'
+        const [model_name, anim_name, elev, azim, current_time_step] = task
 
         const folder_name = path.join('data', model_name, anim_name, elev + '', azim + '');
 
