@@ -20,12 +20,14 @@ let counter = 0;
 
     let page = await browser.newPage();
 
-    const queue_data = JSON.parse(fs.readFileSync(path.join('queue', 'queue3.json'), 'utf8'));
+    const queue_data = JSON.parse(fs.readFileSync(path.join('queue', 'queue0.json'), 'utf8'));
 
     for (const task of queue_data) {
         // console.log(task)
 
-        const [model_name, anim_name, elev, azim, current_time_step] = task
+        const [_model_name, anim_name, elev, azim, current_time_step] = task
+
+        const model_name = 'sophie.fbx'
 
         const folder_name = path.join('data', model_name, anim_name, elev + '', azim + '');
 
