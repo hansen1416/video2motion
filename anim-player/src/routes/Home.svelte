@@ -20,7 +20,6 @@
 
 	const clock = new THREE.Clock();
 
-	let anim_played = false;
 	let show_done = false;
 
 	// model file name
@@ -36,22 +35,22 @@
 
 	anim = decodeURIComponent(anim);
 
-	function animate() {
-		if (anim_mixer && anim_action) {
-			anim_mixer.update(clock.getDelta());
-		}
+	// function animate() {
+	// 	if (anim_mixer && anim_action) {
+	// 		anim_mixer.update(clock.getDelta());
+	// 	}
 
-		// update physics world and threejs renderer
-		threeScene.onFrameUpdate();
+	// 	// update physics world and threejs renderer
+	// 	threeScene.onFrameUpdate();
 
-		threeScene.followTarget(elevation, azimuth);
+	// 	threeScene.followTarget(elevation, azimuth);
 
-		if (anim_played) {
-			show_done = true;
-		}
+	// 	if (anim_played) {
+	// 		show_done = true;
+	// 	}
 
-		animation_pointer = requestAnimationFrame(animate);
-	}
+	// 	animation_pointer = requestAnimationFrame(animate);
+	// }
 
 	function get_longest_track(tracks) {
 		let max_len = 0;
@@ -99,20 +98,28 @@
 
 			anim_action.paused = true;
 
-			anim_action.play();
-
-			// threeScene.setCamera(fbx_model, elevation, azimuth);
-
 			const max_times = get_longest_track(clip.tracks);
 
 			const max_delta = max_times[step];
 
 			anim_action.time = max_delta;
 
-			anim_played = true;
+			anim_action.play();
+
+			// 	if (anim_mixer && anim_action) {
+			anim_mixer.update(clock.getDelta());
+			// }
+
+			// set camera position
+			threeScene.followTarget(elevation, azimuth);
+
+			// render the scene
+			threeScene.onFrameUpdate();
+
+			show_done = true;
 		});
 
-		animate();
+		// animate();
 	});
 
 	onDestroy(() => {
