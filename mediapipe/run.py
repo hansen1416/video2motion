@@ -63,3 +63,16 @@ with PoseLandmarker.create_from_options(options) as landmarker:
                 print(f"Skipping {file_path}")
 
         break
+
+#     import mediapipe as mp
+
+# # Load the input image from an image file.
+# mp_image = mp.Image.create_from_file('/path/to/image')
+
+# # Load the input image from a numpy array.
+# mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=numpy_image)
+
+
+#     # Perform pose landmarking on the provided single image.
+# # The pose landmarker must be created with the image mode.
+# pose_landmarker_result = landmarker.detect(mp_image)
