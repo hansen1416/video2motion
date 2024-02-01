@@ -54,7 +54,7 @@ function get_longest_track (tracks) {
 
     // const elevation = [60, 90, 120];
     // const azimuth = [0, 45, 90, 135, 180, 225, 270, 315];
-    const elevation = [0];
+    const elevation = [30];
     const azimuth = [0, 90, 180, 270];
 
     // sort `animatiom_names` alphabetically
