@@ -50,8 +50,6 @@ function get_longest_track (tracks) {
     const animation_dir = path.join('..', 'anim-player', 'public', 'anim-json')
     const animatiom_names = getFileNames(animation_dir)
 
-    console.log(animatiom_names.length)
-
     // const elevation = [60, 90, 120];
     // const azimuth = [0, 45, 90, 135, 180, 225, 270, 315];
     const elevation = [30];
