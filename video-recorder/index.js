@@ -35,7 +35,7 @@ let counter = 0;
 
                 const folder_name = path.join('data', char, anim_name, elev + '', azim + '');
 
-                const filename = path.join(folder_name, `${current_time_step}.png`);
+                const filename = path.join(folder_name, `${current_time_step}.jpg`);
 
                 try {
 

@@ -35,7 +35,7 @@ const puppeteer = require('puppeteer');
 
     await submit_btn.dispose();
 
-    await page.screenshot({ path: 'example.png' });
+    await page.screenshot({ path: 'example.jpg' });
     // await browser.close();
 
     // 2dee24f8-3b49-48af-b735-c6377509eaac
