@@ -37,6 +37,18 @@ def draw_landmarks_on_image(rgb_image, detection_result):
     return annotated_image
 
 
+def save_pose_visualize_image(annotated_image, image_name="tmp.jpg"):
+    bgr_array = cv2.cvtColor(annotated_image, cv2.COLOR_RGB2BGR)
+
+    cv2.imwrite(image_name, bgr_array)
+
+
+def save_mask_image(segmentation_mask):
+    visualized_mask = np.repeat(segmentation_mask[:, :, np.newaxis], 3, axis=2) * 255
+
+    cv2.imwrite("tmp_mask.jpg", visualized_mask)
+
+
 # `models` dir in the current file directory
 model_path = os.path.join(
     os.path.dirname(__file__), "models", "pose_landmarker_heavy.task"
@@ -99,9 +111,27 @@ with PoseLandmarker.create_from_options(options) as landmarker:
                         )
                         segmentation_masks = pose_landmarker_result.segmentation_masks
 
-                        # print(pose_landmarks)
-                        # print(pose_world_landmarks)
-                        # print(segmentation_masks[0].numpy_view().shape)
+                        # # Convert landmarks to JSON
+                        # landmark_data = json.dumps(pose_landmarks, indent=4)
+
+                        # # Save to a JSON file
+                        # with open("landmarks.json", "w") as jsonfile:
+                        #     jsonfile.write(landmark_data)
+
+                        # world_langmark_data = json.dumps(pose_world_landmarks, indent=4)
+
+                        # # Save to a JSON file
+                        # with open("world_landmarks.json", "w") as jsonfile:
+                        #     jsonfile.write(landmark_data)
+
+                        for lm in pose_landmarks[0]:
+                            print(lm.x, lm.y, lm.z, lm.visibility, lm.presence)
+
+                        print(pose_landmarks)
+
+                        # print(pose_landmarks.landmark)
+                        # print(pose_world_landmarks.landmark)
+                        # print(segmentation_masks[0])
 
                         # print(mp_image.numpy_view().shape)
 
@@ -111,13 +141,10 @@ with PoseLandmarker.create_from_options(options) as landmarker:
                         annotated_image = draw_landmarks_on_image(
                             mp_image.numpy_view(), pose_landmarker_result
                         )
+                        save_pose_visualize_image(annotated_image)
 
-                        bgr_array = cv2.cvtColor(annotated_image, cv2.COLOR_RGB2BGR)
-
-                        print(annotated_image.shape)
-                        print(bgr_array)
-
-                        cv2.imwrite("tmp.jpg", bgr_array)
+                        segmentation_mask = segmentation_masks[0].numpy_view()
+                        save_mask_image(segmentation_mask)
 
                     break
 
