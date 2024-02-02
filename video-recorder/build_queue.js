@@ -65,6 +65,19 @@ function get_longest_track (tracks) {
     let data = []
 
     for (let model_name of model_names) {
+
+        const queue_dir = path.join('queue', model_name)
+
+        try {
+
+            if (!fs.existsSync(queue_dir)) {
+                fs.mkdirSync(queue_dir, { recursive: true });
+            }
+            // console.log(`Folder ${folder_name} created successfully`);
+        } catch (err) {
+            console.error('Error creating folder:', err);
+        }
+
         for (let anim_name of animatiom_names) {
             for (let elev of elevation) {
                 for (let azim of azimuth) {
@@ -77,7 +90,7 @@ function get_longest_track (tracks) {
 
                     while (current_time_step < lengest_track[1]) {
 
-                        data.push([model_name, anim_name, elev, azim, current_time_step])
+                        data.push([anim_name, elev, azim, current_time_step])
 
                         // 20 frames per second
                         current_time_step += 3;
@@ -89,9 +102,10 @@ function get_longest_track (tracks) {
             counter += 1;
 
             if (counter >= 300) {
+                // every 300 tasks, save the data to a local file
 
                 // save data to a local file named queue0.json
-                fs.writeFileSync(path.join('queue', `queue${queue_num}.json`), JSON.stringify(data));
+                fs.writeFileSync(path.join(queue_dir, `queue${queue_num}.json`), JSON.stringify(data));
 
                 queue_num += 1;
 

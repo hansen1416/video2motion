@@ -20,63 +20,63 @@ let counter = 0;
 
     let page = await browser.newPage();
 
-    const queue_data = JSON.parse(fs.readFileSync(path.join('queue', 'queue0.json'), 'utf8'));
+    const character_names = ['x_bot.fbx'];
 
-    for (const task of queue_data) {
-        // console.log(task)
+    for (const char of character_names) {
 
-        const [model_name, anim_name, elev, azim, current_time_step] = task
+        for (const queue_num of [0, 1, 2]) {
 
-        const folder_name = path.join('data', model_name, anim_name, elev + '', azim + '');
+            const queue_data = JSON.parse(fs.readFileSync(path.join(char, 'queue', `queue${queue_num}.json`), 'utf8'));
 
-        const filename = path.join(folder_name, `${current_time_step}.png`);
+            for (const task of queue_data) {
+                // console.log(task)
 
-        try {
+                const [anim_name, elev, azim, current_time_step] = task
 
-            if (!fs.existsSync(folder_name)) {
-                fs.mkdirSync(folder_name, { recursive: true });
+                const folder_name = path.join('data', char, anim_name, elev + '', azim + '');
+
+                const filename = path.join(folder_name, `${current_time_step}.png`);
+
+                try {
+
+                    if (!fs.existsSync(folder_name)) {
+                        fs.mkdirSync(folder_name, { recursive: true });
+                    }
+                    // console.log(`Folder ${folder_name} created successfully`);
+                } catch (err) {
+                    console.error('Error creating folder:', err);
+                }
+
+                // check if file already exists
+                if (fs.existsSync(filename)) {
+                    console.log(`File ${filename} already exists`);
+                    continue;
+                }
+
+                // request the animation at each time step
+                const url = `http://localhost:5173/${encodeURIComponent(char)}/${encodeURIComponent(anim_name)}/${encodeURIComponent(current_time_step)}/${encodeURIComponent(elev)}/${encodeURIComponent(azim)}`;
+
+                console.log(`Request to ${url}`);
+
+                await page.goto(url);
+
+                await page.waitForSelector('#done', { visible: true });
+
+                console.log(`Saving ${filename}`);
+
+                await page.screenshot({ path: filename });
+
+                if (counter % 100 == 0) {
+                    await browser.close();
+
+                    browser = await puppeteer.launch();
+
+                    page = await browser.newPage();
+                }
+
+                counter += 1;
             }
-
-            // console.log(`Folder ${folder_name} created successfully`);
-        } catch (err) {
-            if (err.code === 'EEXIST') {
-                console.log('Folder already exists');
-            } else {
-                console.error('Error creating folder:', err);
-            }
         }
-
-        // check if file already exists
-        if (fs.existsSync(filename)) {
-            console.log(`File ${filename} already exists`);
-            continue;
-        }
-
-        // request the animation at each time step
-        const url = `http://localhost:5173/${encodeURIComponent(model_name)}/${encodeURIComponent(anim_name)}/${encodeURIComponent(current_time_step)}/${encodeURIComponent(elev)}/${encodeURIComponent(azim)}`;
-
-        console.log(`Request to ${url}`);
-
-        await page.goto(url);
-
-        await page.waitForSelector('#done', { visible: true });
-
-        console.log(`Saving ${filename}`);
-
-        await page.screenshot({ path: filename });
-
-        if (counter % 100 == 0) {
-            await browser.close();
-
-            browser = await puppeteer.launch();
-
-            page = await browser.newPage();
-        }
-
-        counter += 1;
     }
-
-
-
 
 })();
