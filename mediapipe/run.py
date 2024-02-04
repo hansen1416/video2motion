@@ -49,35 +49,6 @@ def save_mask_image(segmentation_mask):
     cv2.imwrite("tmp_mask.jpg", visualized_mask)
 
 
-# `models` dir in the current file directory
-model_path = os.path.join(
-    os.path.dirname(__file__), "models", "pose_landmarker_heavy.task"
-)
-
-source_image_dir = os.path.join(
-    os.path.dirname(__file__), "../", "video-recorder", "data"
-)
-
-queue_dir = os.path.join(os.path.dirname(__file__), "../", "video-recorder", "queue")
-
-charater_names = ["x_bot.fbx"]
-
-results_dir = os.path.join(os.path.dirname(__file__), "results")
-
-# prepare mediapipe settings
-BaseOptions = mp.tasks.BaseOptions
-PoseLandmarker = mp.tasks.vision.PoseLandmarker
-PoseLandmarkerOptions = mp.tasks.vision.PoseLandmarkerOptions
-VisionRunningMode = mp.tasks.vision.RunningMode
-
-# Create a pose landmarker instance with the video mode:
-options = PoseLandmarkerOptions(
-    base_options=BaseOptions(model_asset_path=model_path),
-    running_mode=VisionRunningMode.IMAGE,
-    output_segmentation_masks=True,
-)
-
-
 def save_pose_results(mp_image, pose_landmarker_result, res_dir):
 
     if not os.path.exists(res_dir):
@@ -98,6 +69,10 @@ def save_pose_results(mp_image, pose_landmarker_result, res_dir):
     pose_landmarks = pose_landmarker_result.pose_landmarks
     pose_world_landmarks = pose_landmarker_result.pose_world_landmarks
     segmentation_masks = pose_landmarker_result.segmentation_masks
+
+    if len(pose_landmarks) == 0 or len(pose_world_landmarks) == 0:
+        print(f"No pose predicted on {res_dir}")
+        return
 
     # save pose landmarks as json
     pose_landmarks_json = []
@@ -165,14 +140,43 @@ def save_pose_results(mp_image, pose_landmarker_result, res_dir):
     # print(segmentation_masks[0].numpy_view())
     # print(mp_image.numpy_view().shape)
 
-    # # STEP 5: Process the detection result. In this case, visualize it.
-    # annotated_image = draw_landmarks_on_image(
-    #     mp_image.numpy_view(), pose_landmarker_result
-    # )
-    # save_pose_visualize_image(annotated_image)
+    # STEP 5: Process the detection result. In this case, visualize it.
+    annotated_image = draw_landmarks_on_image(
+        mp_image.numpy_view(), pose_landmarker_result
+    )
+    save_pose_visualize_image(annotated_image)
 
-    # segmentation_mask = segmentation_masks[0].numpy_view()
-    # save_mask_image(segmentation_mask)
+    segmentation_mask = segmentation_masks[0].numpy_view()
+    save_mask_image(segmentation_mask)
+
+
+# `models` dir in the current file directory
+model_path = os.path.join(
+    os.path.dirname(__file__), "models", "pose_landmarker_heavy.task"
+)
+
+source_image_dir = os.path.join(
+    os.path.dirname(__file__), "../", "video-recorder", "data"
+)
+
+queue_dir = os.path.join(os.path.dirname(__file__), "../", "video-recorder", "queue")
+
+charater_names = ["x_bot.fbx"]
+
+results_dir = os.path.join(os.path.dirname(__file__), "results")
+
+# prepare mediapipe settings
+BaseOptions = mp.tasks.BaseOptions
+PoseLandmarker = mp.tasks.vision.PoseLandmarker
+PoseLandmarkerOptions = mp.tasks.vision.PoseLandmarkerOptions
+VisionRunningMode = mp.tasks.vision.RunningMode
+
+# Create a pose landmarker instance with the video mode:
+options = PoseLandmarkerOptions(
+    base_options=BaseOptions(model_asset_path=model_path),
+    running_mode=VisionRunningMode.IMAGE,
+    output_segmentation_masks=True,
+)
 
 
 with PoseLandmarker.create_from_options(options) as landmarker:
@@ -205,3 +209,14 @@ with PoseLandmarker.create_from_options(options) as landmarker:
                         res_dir = os.path.join(results_dir, char, *list(map(str, task)))
 
                         save_pose_results(mp_image, pose_landmarker_result, res_dir)
+
+
+I'm working on a project involving 3D animation data, where I'm trying to predict the rotations of a humanoid model's joints. 
+
+I have a dataset of animation data (which I collected from mixamo), essentially sequences of joint rotations. 
+Using this data, I play the animation on a 3D model in a webpage and capture screenshots. 
+Then, I feed these screenshots into a deep learning model (mediapipe) to predict the joint positions (x,y,z) in each image.
+
+Then, I'd like to train a new model that uses both the predicted joint positions and the corresponding screenshots as input data to predict the joint rotations.
+
+I'm reaching out to the community for some expert advice. Could anyone suggest suitable algorithms or neural network structures that I could explore for this task? Any insights or recommendations would be greatly appreciated!
