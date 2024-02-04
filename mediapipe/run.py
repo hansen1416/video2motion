@@ -209,14 +209,3 @@ with PoseLandmarker.create_from_options(options) as landmarker:
                         res_dir = os.path.join(results_dir, char, *list(map(str, task)))
 
                         save_pose_results(mp_image, pose_landmarker_result, res_dir)
-
-
-I'm working on a project involving 3D animation data, where I'm trying to predict the rotations of a humanoid model's joints. 
-
-I have a dataset of animation data (which I collected from mixamo), essentially sequences of joint rotations. 
-Using this data, I play the animation on a 3D model in a webpage and capture screenshots. 
-Then, I feed these screenshots into a deep learning model (mediapipe) to predict the joint positions (x,y,z) in each image.
-
-Then, I'd like to train a new model that uses both the predicted joint positions and the corresponding screenshots as input data to predict the joint rotations.
-
-I'm reaching out to the community for some expert advice. Could anyone suggest suitable algorithms or neural network structures that I could explore for this task? Any insights or recommendations would be greatly appreciated!
