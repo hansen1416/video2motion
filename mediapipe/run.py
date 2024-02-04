@@ -77,6 +77,104 @@ options = PoseLandmarkerOptions(
     output_segmentation_masks=True,
 )
 
+
+def save_pose_results(mp_image, pose_landmarker_result, res_dir):
+
+    if not os.path.exists(res_dir):
+        os.makedirs(res_dir)
+
+    landmark_filename = os.path.join(res_dir, "landmarks.json")
+    world_landmark_filename = os.path.join(res_dir, "world_landmarks.json")
+    masked_filename = os.path.join(res_dir, "masked.jpg")
+
+    if (
+        os.path.exists(landmark_filename)
+        and os.path.exists(world_landmark_filename)
+        and os.path.exists(masked_filename)
+    ):
+        print(f"Skipping {res_dir}")
+        return
+
+    pose_landmarks = pose_landmarker_result.pose_landmarks
+    pose_world_landmarks = pose_landmarker_result.pose_world_landmarks
+    segmentation_masks = pose_landmarker_result.segmentation_masks
+
+    # save pose landmarks as json
+    pose_landmarks_json = []
+
+    for lm in pose_landmarks[0]:
+        pose_landmarks_json.append(
+            {
+                "x": lm.x,
+                "y": lm.y,
+                "z": lm.z,
+                "visibility": lm.visibility,
+                "presence": lm.presence,
+            }
+        )
+
+    with open(landmark_filename, "w") as jsonfile:
+        json.dump(pose_landmarks_json, jsonfile, indent=4)
+
+    # save world pose landmarks as json
+    pose_world_landmarks_json = []
+
+    for lm in pose_world_landmarks[0]:
+        pose_world_landmarks_json.append(
+            {
+                "x": lm.x,
+                "y": lm.y,
+                "z": lm.z,
+                "visibility": lm.visibility,
+                "presence": lm.presence,
+            }
+        )
+
+    with open(world_landmark_filename, "w") as jsonfile:
+        json.dump(pose_world_landmarks_json, jsonfile, indent=4)
+
+    segmentation_mask_np = segmentation_masks[0].numpy_view().copy()
+    # Threshold for small values
+    threshold = 1e-2
+    # set where the mask is less than threshold to 0
+    segmentation_mask_np[segmentation_mask_np > threshold] = 1
+
+    # cast to uint8
+    segmentation_mask_np = segmentation_mask_np.astype(np.uint8)
+
+    # use `segmentation_mask_np` as mask to select image data from `mp_image.numpy_view()`
+    # and save it as a new image
+    # save pose image
+    pose_image = mp_image.numpy_view().copy()
+
+    pose_image[segmentation_mask_np == 0, :] = 0
+    # set pose_image where its value is close to [0, 255, 0] to [0, 0, 0]
+    # pose_image[np.all(pose_image == [0, 255, 0], axis=2)] = [
+    #     0,
+    #     0,
+    #     0,
+    # ]
+
+    # print(pose_image)
+
+    cv2.imwrite(masked_filename, pose_image)
+
+    # print(pose_landmarks)
+    # print(pose_landmarks.landmark)
+    # print(pose_world_landmarks.landmark)
+    # print(segmentation_masks[0].numpy_view())
+    # print(mp_image.numpy_view().shape)
+
+    # # STEP 5: Process the detection result. In this case, visualize it.
+    # annotated_image = draw_landmarks_on_image(
+    #     mp_image.numpy_view(), pose_landmarker_result
+    # )
+    # save_pose_visualize_image(annotated_image)
+
+    # segmentation_mask = segmentation_masks[0].numpy_view()
+    # save_mask_image(segmentation_mask)
+
+
 with PoseLandmarker.create_from_options(options) as landmarker:
 
     for char in charater_names:
@@ -100,102 +198,10 @@ with PoseLandmarker.create_from_options(options) as landmarker:
 
                         # Load the input image from an image file.
                         mp_image = mp.Image.create_from_file(image_file)
-
                         # Perform pose landmarking on the provided single image.
                         # The pose landmarker must be created with the image mode.
                         pose_landmarker_result = landmarker.detect(mp_image)
-
-                        pose_landmarks = pose_landmarker_result.pose_landmarks
-                        pose_world_landmarks = (
-                            pose_landmarker_result.pose_world_landmarks
-                        )
-                        segmentation_masks = pose_landmarker_result.segmentation_masks
-
                         # result dir for current pose image
                         res_dir = os.path.join(results_dir, char, *list(map(str, task)))
 
-                        if not os.path.exists(res_dir):
-                            os.makedirs(res_dir)
-
-                        # save pose landmarks as json
-                        pose_landmarks_json = []
-
-                        for lm in pose_landmarks[0]:
-                            pose_landmarks_json.append(
-                                {
-                                    "x": lm.x,
-                                    "y": lm.y,
-                                    "z": lm.z,
-                                    "visibility": lm.visibility,
-                                    "presence": lm.presence,
-                                }
-                            )
-
-                        with open(
-                            os.path.join(res_dir, "landmarks.json"), "w"
-                        ) as jsonfile:
-                            json.dump(pose_landmarks_json, jsonfile, indent=4)
-
-                        # save world pose landmarks as json
-                        pose_world_landmarks_json = []
-
-                        for lm in pose_world_landmarks[0]:
-                            pose_world_landmarks_json.append(
-                                {
-                                    "x": lm.x,
-                                    "y": lm.y,
-                                    "z": lm.z,
-                                    "visibility": lm.visibility,
-                                    "presence": lm.presence,
-                                }
-                            )
-
-                        with open(
-                            os.path.join(res_dir, "world_landmarks.json"), "w"
-                        ) as jsonfile:
-                            json.dump(pose_world_landmarks_json, jsonfile, indent=4)
-
-                        segmentation_mask_np = segmentation_masks[0].numpy_view().copy()
-                        # Threshold for small values
-                        threshold = 1e-2
-                        # set where the mask is less than threshold to 0
-                        segmentation_mask_np[segmentation_mask_np > threshold] = 1
-
-                        # cast to uint8
-                        segmentation_mask_np = segmentation_mask_np.astype(np.uint8)
-
-                        # use `segmentation_mask_np` as mask to select image data from `mp_image.numpy_view()`
-                        # and save it as a new image
-                        # save pose image
-                        pose_image = mp_image.numpy_view().copy()
-
-                        pose_image[segmentation_mask_np == 0, :] = 0
-                        # set pose_image where its value is close to [0, 255, 0] to [0, 0, 0]
-                        # pose_image[np.all(pose_image == [0, 255, 0], axis=2)] = [
-                        #     0,
-                        #     0,
-                        #     0,
-                        # ]
-
-                        # print(pose_image)
-
-                        cv2.imwrite(os.path.join(res_dir, "masked.jpg"), pose_image)
-
-                        # print(pose_landmarks)
-                        # print(pose_landmarks.landmark)
-                        # print(pose_world_landmarks.landmark)
-                        # print(segmentation_masks[0].numpy_view())
-                        # print(mp_image.numpy_view().shape)
-
-                        # # STEP 5: Process the detection result. In this case, visualize it.
-                        # annotated_image = draw_landmarks_on_image(
-                        #     mp_image.numpy_view(), pose_landmarker_result
-                        # )
-                        # save_pose_visualize_image(annotated_image)
-
-                        # segmentation_mask = segmentation_masks[0].numpy_view()
-                        # save_mask_image(segmentation_mask)
-
-                    break
-
-            break
+                        save_pose_results(mp_image, pose_landmarker_result, res_dir)

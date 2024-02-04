@@ -2,14 +2,11 @@ import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { MathUtils } from "three/src/math/MathUtils.js";
 
-export const SceneProperties = {
-	camera_height: 0,
-	camera_far_z: 240,
-};
 
-const CameraOffset = new THREE.Vector3(0, 0, 240);
+const CAMERA_DISTANCE = 160;
 
-Object.freeze(SceneProperties);
+const CameraOffset = new THREE.Vector3(0, 0, CAMERA_DISTANCE);
+
 
 let instance;
 
@@ -52,11 +49,11 @@ export default class ThreeScene {
 			0.01,
 			4000
 		);
-
+		// camera initial position
 		this.camera.position.set(
-			0,
-			SceneProperties.camera_height,
-			SceneProperties.camera_far_z
+			CameraOffset.x,
+			CameraOffset.y,
+			CameraOffset.z
 		);
 
 		this.camera.updateProjectionMatrix(); // update the camera's projection matrix
@@ -136,9 +133,9 @@ export default class ThreeScene {
 
 		diva.children[0].getWorldPosition(object_position)
 
-		CameraOffset.x = Math.sin(MathUtils.degToRad(azimuth)) * 240;
-		CameraOffset.y = Math.sin(MathUtils.degToRad(elevation)) * 240;
-		CameraOffset.z = Math.cos(MathUtils.degToRad(azimuth)) * 240;
+		CameraOffset.x = Math.sin(MathUtils.degToRad(azimuth)) * CAMERA_DISTANCE;
+		CameraOffset.y = Math.sin(MathUtils.degToRad(elevation)) * CAMERA_DISTANCE;
+		CameraOffset.z = Math.cos(MathUtils.degToRad(azimuth)) * CAMERA_DISTANCE;
 
 		const target_pos = new THREE.Vector3().addVectors(object_position, CameraOffset);
 
@@ -156,7 +153,7 @@ export default class ThreeScene {
 
 
 		// Set the new values on the Spherical object.
-		spherical.radius = SceneProperties.camera_far_z;
+		spherical.radius = CAMERA_DISTANCE;
 		spherical.phi = MathUtils.degToRad(elevation);
 		spherical.theta = MathUtils.degToRad(azimuth);
 
