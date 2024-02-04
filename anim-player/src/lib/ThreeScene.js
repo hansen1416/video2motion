@@ -61,7 +61,7 @@ export default class ThreeScene {
 		// env light
 		this.scene.add(new THREE.AmbientLight(0xffffff, 1));
 
-		this.scene.background = new THREE.Color(0x00ff00);
+		this.scene.background = new THREE.Color(0xcccccc);
 
 		const direct_light = new THREE.DirectionalLight(0xffffff, 1);
 		direct_light.position.set(0, 100, 100);
