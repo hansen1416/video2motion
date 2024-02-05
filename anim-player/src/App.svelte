@@ -3,6 +3,7 @@
 	import Home from "./routes/Home.svelte";
 	import Loader from "./routes/Loader.svelte";
 	import Camera from "./routes/Camera.svelte";
+	import GlbTest from "./routes/GlbTest.svelte";
 </script>
 
 <Router>
@@ -17,6 +18,7 @@
 			/>
 		</Route>
 		<Route path="/" component={Loader} />
+		<Route path="/glb" component={GlbTest} />
 		<Route path="/camera" component={Camera} />
 	</div>
 </Router>

@@ -3,7 +3,7 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { MathUtils } from "three/src/math/MathUtils.js";
 
 
-const CAMERA_DISTANCE = 160;
+const CAMERA_DISTANCE = 5;
 
 const CameraOffset = new THREE.Vector3(0, 0, CAMERA_DISTANCE);
 
@@ -89,8 +89,8 @@ export default class ThreeScene {
 
 		this.controls = new OrbitControls(this.camera, canvas);
 
-		this.controls.minDistance = 150;
-		this.controls.maxDistance = 800;
+		// this.controls.minDistance = 150;
+		// this.controls.maxDistance = 800;
 
 		this.renderer.setSize(width, height);
 
