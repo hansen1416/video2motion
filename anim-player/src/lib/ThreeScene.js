@@ -3,7 +3,7 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 import { MathUtils } from "three/src/math/MathUtils.js";
 
 
-const CAMERA_DISTANCE = 3;
+const CAMERA_DISTANCE = 2;
 
 const CameraOffset = new THREE.Vector3(0, 0, CAMERA_DISTANCE);
 

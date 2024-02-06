@@ -39,7 +39,7 @@
 		);
 
 		// -100 is ground level
-		threeScene.scene.position.set(0, -2, 0);
+		threeScene.scene.position.set(0, -1, 0);
 
 		Promise.all([
 			loadGLTF(`/glb/646c7dffa386cf7c3cfb3923.glb`),
