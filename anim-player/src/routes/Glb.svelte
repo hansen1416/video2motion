@@ -39,15 +39,13 @@
 		);
 
 		// -100 is ground level
-		// threeScene.scene.position.set(0, -150, 0);
+		threeScene.scene.position.set(0, -2, 0);
 
 		Promise.all([
 			loadGLTF(`/glb/646c7dffa386cf7c3cfb3923.glb`),
 			loadJSON(`/anim-json/Acknowledging.json`),
 		]).then(([glb_model, anim_data]) => {
 			glb_model = glb_model.scene.children[0];
-
-			console.log(glb_model, 1111111111111);
 
 			glb_model.name = "diva";
 
