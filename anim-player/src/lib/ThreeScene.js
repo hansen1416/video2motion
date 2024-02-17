@@ -5,7 +5,7 @@ import { MathUtils } from "three/src/math/MathUtils.js";
 
 const CAMERA_DISTANCE = 2;
 
-const CameraOffset = new THREE.Vector3(0, 0, CAMERA_DISTANCE);
+const CameraOffset = new THREE.Vector3(0, 0.6, CAMERA_DISTANCE);
 
 
 let instance;
@@ -41,7 +41,7 @@ export default class ThreeScene {
 
 		this.scene = new THREE.Scene();
 
-		this.scene.add(new THREE.AxesHelper(5));
+		// this.scene.add(new THREE.AxesHelper(5));
 
 		this.camera = new THREE.PerspectiveCamera(
 			75,

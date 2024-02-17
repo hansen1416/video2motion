@@ -43,7 +43,7 @@
 
 		Promise.all([
 			loadGLTF(`/glb/646c7dffa386cf7c3cfb3923.glb`),
-			loadJSON(`/anim-json/Acknowledging.json`),
+			loadJSON(`/anim-json/180 Turn W_ Briefcase (1).json`),
 		]).then(([glb_model, anim_data]) => {
 			glb_model = glb_model.scene.children[0];
 
@@ -57,7 +57,7 @@
 
 			anim_action = anim_mixer.clipAction(clip);
 			anim_action.reset();
-			anim_action.setLoop(THREE.LoopRepeat, 1);
+			anim_action.setLoop(THREE.LoopRepeat);
 			// keep model at the position where it stops
 			anim_action.clampWhenFinished = true;
 			anim_action.enabled = true;
@@ -65,7 +65,7 @@
 
 			anim_action.paused = false;
 
-			anim_action.play();
+			// anim_action.play();
 		});
 
 		animate();
