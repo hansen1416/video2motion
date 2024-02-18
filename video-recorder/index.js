@@ -20,7 +20,7 @@ let counter = 0;
 
     let page = await browser.newPage();
 
-    const character_names = ['x_bot.fbx'];
+    const character_names = ['dors.glb'];
 
     for (const char of character_names) {
 

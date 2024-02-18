@@ -45,7 +45,7 @@ function get_longest_track (tracks) {
 (async () => {
 
     // models to request
-    const model_names = ['x_bot.fbx']
+    const model_names = ['dors.glb']
 
     const animation_dir = path.join('..', 'anim-player', 'public', 'anim-json')
     const animatiom_names = getFileNames(animation_dir)

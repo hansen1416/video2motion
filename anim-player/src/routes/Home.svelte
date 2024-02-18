@@ -3,7 +3,7 @@
 	import { onDestroy, onMount } from "svelte";
 	import * as THREE from "three";
 	import ThreeScene from "../lib/ThreeScene";
-	import { loadFBX, loadJSON } from "../utils/ropes";
+	import { loadFBX, loadGLTF, loadJSON } from "../utils/ropes";
 
 	/** @type {HTMLCanvasElement} */
 	let canvas;
@@ -76,48 +76,67 @@
 		// -100 is ground level
 		threeScene.scene.position.set(0, -150, 0);
 
-		Promise.all([
-			loadFBX(`/fbx/${model}`),
-			loadJSON(`/anim-json/${anim}`),
-		]).then(([fbx_model, anim_data]) => {
-			fbx_model.name = "diva";
+		// check if model has ".fbx" in it
+		let model_task = null;
+		let model_type = "";
 
-			anim_mixer = new THREE.AnimationMixer(fbx_model);
-			// console.log(fbx_unity_anim);
-			threeScene.scene.add(fbx_model);
+		if (model.indexOf(".fbx") !== -1) {
+			model_task = loadFBX(`/fbx/${model}`);
+			model_type = "fbx";
+		} else if (model.indexOf(".glb") !== -1) {
+			model_task = loadGLTF(`/glb/${model}`);
+			model_type = "glb";
+		}
 
-			const clip = THREE.AnimationClip.parse(anim_data);
+		if (model_task === null) {
+			throw new Error("Model file type not supported");
+		}
 
-			anim_action = anim_mixer.clipAction(clip);
-			anim_action.reset();
-			anim_action.setLoop(THREE.LoopRepeat, 1);
-			// keep model at the position where it stops
-			anim_action.clampWhenFinished = true;
-			anim_action.enabled = true;
-			// anim_action.fadeIn(0.5);
+		Promise.all([model_task, loadJSON(`/anim-json/${anim}`)]).then(
+			([model_mesh, anim_data]) => {
+				if (model_type === "glb") {
+					model_mesh = model_mesh.scene.children[0];
+				}
 
-			anim_action.paused = true;
+				model_mesh.name = "diva";
 
-			const max_times = get_longest_track(clip.tracks);
+				anim_mixer = new THREE.AnimationMixer(model_mesh);
+				// console.log(fbx_unity_anim);
+				threeScene.scene.add(model_mesh);
 
-			const max_delta = max_times[step];
+				const clip = THREE.AnimationClip.parse(anim_data);
 
-			anim_action.time = max_delta;
+				anim_action = anim_mixer.clipAction(clip);
+				anim_action.reset();
+				anim_action.setLoop(THREE.LoopRepeat, 1);
+				// keep model at the position where it stops
+				anim_action.clampWhenFinished = true;
+				anim_action.enabled = true;
+				// anim_action.fadeIn(0.5);
 
-			anim_action.play();
+				anim_action.paused = true;
 
-			// 	if (anim_mixer && anim_action) {
-			anim_mixer.update(clock.getDelta());
-			// }
+				const max_times = get_longest_track(clip.tracks);
 
-			// set camera position
-			threeScene.followTarget(elevation, azimuth);
+				const max_delta = max_times[step];
 
-			// render the scene
-			threeScene.onFrameUpdate();
+				anim_action.time = max_delta;
 
-			show_done = true;
-		});
+				anim_action.play();
+
+				// 	if (anim_mixer && anim_action) {
+				anim_mixer.update(clock.getDelta());
+				// }
+
+				// set camera position
+				threeScene.followTarget(elevation, azimuth);
+
+				// render the scene
+				threeScene.onFrameUpdate();
+
+				show_done = true;
+			},
+		);
 
 		// animate();
 	});
