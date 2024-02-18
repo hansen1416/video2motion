@@ -140,6 +140,7 @@ def save_pose_results(mp_image, pose_landmarker_result, res_dir):
     # print(segmentation_masks[0].numpy_view())
     # print(mp_image.numpy_view().shape)
 
+    return
     # STEP 5: Process the detection result. In this case, visualize it.
     annotated_image = draw_landmarks_on_image(
         mp_image.numpy_view(), pose_landmarker_result
@@ -161,7 +162,7 @@ source_image_dir = os.path.join(
 
 queue_dir = os.path.join(os.path.dirname(__file__), "../", "video-recorder", "queue")
 
-charater_names = ["x_bot.fbx"]
+charater_names = ["dors.glb"]
 
 results_dir = os.path.join(os.path.dirname(__file__), "results")
 
@@ -183,7 +184,7 @@ with PoseLandmarker.create_from_options(options) as landmarker:
 
     for char in charater_names:
 
-        for queue_num in [0, 1, 2]:
+        for queue_num in [0, 1, 2, 3, 4, 5, 6]:
 
             queue_file = os.path.join(queue_dir, char, f"queue{queue_num}.json")
 
@@ -191,6 +192,15 @@ with PoseLandmarker.create_from_options(options) as landmarker:
                 queue_data = json.load(f)
 
                 for task in queue_data:
+
+                    # result dir for current pose image
+                    res_dir = os.path.join(results_dir, char, *list(map(str, task)))
+
+                    # check if results already exists
+                    if os.path.exists(res_dir) and len(os.listdir(res_dir)) == 3:
+                        print(f"Skipping {res_dir}")
+                        continue
+
                     image_file = os.path.join(
                         source_image_dir, char, *list(map(str, task))
                     )
@@ -205,7 +215,8 @@ with PoseLandmarker.create_from_options(options) as landmarker:
                         # Perform pose landmarking on the provided single image.
                         # The pose landmarker must be created with the image mode.
                         pose_landmarker_result = landmarker.detect(mp_image)
-                        # result dir for current pose image
-                        res_dir = os.path.join(results_dir, char, *list(map(str, task)))
 
                         save_pose_results(mp_image, pose_landmarker_result, res_dir)
+
+                    # break
+            # break
