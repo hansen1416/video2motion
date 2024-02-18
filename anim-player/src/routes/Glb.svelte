@@ -65,7 +65,7 @@
 
 			anim_action.paused = false;
 
-			// anim_action.play();
+			anim_action.play();
 		});
 
 		animate();

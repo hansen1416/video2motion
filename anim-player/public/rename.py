@@ -19,9 +19,19 @@ for fname in filenames:
     with open(os.path.join(data_dir_mixamo, fname), "r") as f:
         data = json.load(f)
 
+        # remove track with name "Hips.position"
+        new_tracks = []
+
         for track in data["tracks"]:
             # replace "mixamorig" with "" in track["name"]
             track["name"] = track["name"].replace("mixamorig", "")
+
+            if track["name"] == "Hips.position":
+                continue
+
+            new_tracks.append(track)
+
+        data["tracks"] = new_tracks
 
         data["name"] = fname.replace(".json", "")
 
