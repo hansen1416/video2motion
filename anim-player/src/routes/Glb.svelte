@@ -43,7 +43,7 @@
 
 		Promise.all([
 			loadGLTF(`/glb/646c7dffa386cf7c3cfb3923.glb`),
-			loadJSON(`/anim-json/180 Turn W_ Briefcase (1).json`),
+			loadJSON(`/anim-json/Zombie Walk.json`),
 		]).then(([glb_model, anim_data]) => {
 			glb_model = glb_model.scene.children[0];
 

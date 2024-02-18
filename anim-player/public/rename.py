@@ -39,4 +39,4 @@ for fname in filenames:
     with open(os.path.join(data_dir, fname), "w") as f:
         json.dump(data, f, indent=2)
 
-    break
+    # break
