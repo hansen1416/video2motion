@@ -23,3 +23,8 @@ Implementation Tips:
 Use PyTorch Lightning or other frameworks for easier implementation and experiment management.
 Visualize the attention weights if you use an attention mechanism to understand which joints influence the prediction.
 Evaluate your model on different metrics relevant to your application, such as average angle error or the ability to reconstruct realistic poses.
+
+
+https://github.com/josharnoldjosh/Resnet-Extract-Image-Feature-Pytorch-Python/blob/master/extract_image_feature.py
+
+https://pytorch.org/hub/pytorch_vision_resnet/
