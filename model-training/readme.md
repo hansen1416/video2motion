@@ -28,3 +28,36 @@ Evaluate your model on different metrics relevant to your application, such as a
 https://github.com/josharnoldjosh/Resnet-Extract-Image-Feature-Pytorch-Python/blob/master/extract_image_feature.py
 
 https://pytorch.org/hub/pytorch_vision_resnet/
+
+
+
+
+
+You're right, an encoder-decoder attention model is a good starting point for your task of predicting joint rotations based on features and positions. Here are some hybrid structures you can consider to enhance performance:
+
+1. Concatenate Features and Positions:
+
+Combine the image features and 3D joint positions before feeding them into the encoder. This allows the encoder to learn a joint representation considering both visual context and spatial information.
+You can concatenate directly or project them to the same dimensionality before concatenating.
+2. Multi-Input Encoder:
+
+Use separate encoder branches for the image features and joint positions. These branches can be LSTMs, CNNs, or any suitable architecture.
+Then, either:
+Concatenate the outputs of the branches before the decoder.
+Use attention between the encoder outputs to let each branch attend to relevant information from the other.
+3. Attention on Encoder Hidden States:
+
+Use attention within the encoder itself, where one encoder branch attends to the hidden states of the other while processing information. This allows the information to flow within the encoder, leveraging context from both sources.
+4. Auxiliary Decoder Branch:
+
+Add a separate decoder branch for predicting intermediate information related to the image features. This branch can predict object locations, limb lengths, or other relevant aspects from the image, which can then be used in the main decoder branch for predicting rotations.
+Additional Tips:
+
+Experiment with different architectures for each branch (LSTMs, CNNs, transformers).
+Consider using residual connections within the network to improve gradient flow.
+Employ batch normalization and dropout for regularization.
+Evaluate your model using appropriate metrics like average angular error or pose reconstruction fidelity.
+Visualize the attention weights to understand how the model focuses on different parts of the input data.
+Remember, the best structure depends on your specific dataset and task. Don't hesitate to experiment, evaluate, and refine your model to achieve optimal performance.
+
+By incorporating these hybrid approaches, you can leverage the information from both image features and joint positions, potentially leading to improved accuracy in your joint rotation prediction task.
