@@ -1,3 +1,14 @@
+import re
+import os
+import unicodedata
+
+
+# Default word tokens
+PAD_token = 0  # Used for padding short sentences
+SOS_token = 1  # Start-of-sentence token
+EOS_token = 2  # End-of-sentence token
+
+
 class Voc:
     def __init__(self, name):
         self.name = name
@@ -8,7 +19,7 @@ class Voc:
         self.num_words = 3  # Count SOS, EOS, PAD
 
     def addSentence(self, sentence):
-        for word in sentence.split(' '):
+        for word in sentence.split(" "):
             self.addWord(word)
 
     def addWord(self, word):
@@ -30,14 +41,18 @@ class Voc:
             if v >= min_count:
                 keep_words.append(k)
 
-        print('keep_words {} / {} = {:.4f}'.format(
-            len(keep_words), len(self.word2index), len(keep_words) / len(self.word2index)
-        ))
+        print(
+            "keep_words {} / {} = {:.4f}".format(
+                len(keep_words),
+                len(self.word2index),
+                len(keep_words) / len(self.word2index),
+            )
+        )
         # Reinitialize dictionaries
         self.word2index = {}
         self.word2count = {}
         self.index2word = {PAD_token: "PAD", SOS_token: "SOS", EOS_token: "EOS"}
-        self.num_words = 3 # Count default tokens
+        self.num_words = 3  # Count default tokens
         for word in keep_words:
             self.addWord(word)
 
@@ -52,4 +67,4 @@ def normalizeString(s):
 
 # Takes string sentence, returns sentence of word indexes
 def indexesFromSentence(voc, sentence):
-    return [voc.word2index[word] for word in sentence.split(' ')] + [EOS_token]
+    return [voc.word2index[word] for word in sentence.split(" ")] + [EOS_token]
