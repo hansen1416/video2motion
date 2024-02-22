@@ -141,8 +141,11 @@ checkpoint = torch.load(loadFilename, map_location=torch.device("cpu"))
 
 # print(checkpoint)
 
+# embedding.weight of encoder
 encoder_sd = checkpoint["en"]
+# embedding.weight of decoder
 decoder_sd = checkpoint["de"]
+
 encoder_optimizer_sd = checkpoint["en_opt"]
 decoder_optimizer_sd = checkpoint["de_opt"]
 embedding_sd = checkpoint["embedding"]
@@ -230,7 +233,7 @@ for s in sentences:
 
 # Evaluate your input by running
 # evaluateInput(traced_encoder, traced_decoder, scripted_searcher, voc)
-evaluateInput(scripted_searcher, voc)
+# evaluateInput(scripted_searcher, voc)
 
 
 # Now that we have successfully converted our model to TorchScript,
