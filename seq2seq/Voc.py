@@ -55,16 +55,3 @@ class Voc:
         self.num_words = 3  # Count default tokens
         for word in keep_words:
             self.addWord(word)
-
-
-# Lowercase and remove non-letter characters
-def normalizeString(s):
-    s = s.lower()
-    s = re.sub(r"([.!?])", r" \1", s)
-    s = re.sub(r"[^a-zA-Z.!?]+", r" ", s)
-    return s
-
-
-# Takes string sentence, returns sentence of word indexes
-def indexesFromSentence(voc, sentence):
-    return [voc.word2index[word] for word in sentence.split(" ")] + [EOS_token]

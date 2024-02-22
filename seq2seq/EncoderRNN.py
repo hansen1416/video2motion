@@ -13,6 +13,11 @@ class EncoderRNN(nn.Module):
     we allow a maximum of MAX_LENGTH tokens in a sentence,
     and all sentences in the batch that have less than MAX_LENGTH tokens are padded at the end
     with our dedicated PAD_token tokens.
+
+    Encoding the input sequence is straightforward:
+    simply forward the entire sequence tensor and its corresponding lengths vector to the encoder.
+    It is important to note that this module only deals with one input sequence at a time, NOT batches of sequences.
+    Therefore, when the constant 1 is used for declaring tensor sizes, this corresponds to a batch size of 1.
     """
 
     def __init__(self, hidden_size, embedding, n_layers=1, dropout=0):
