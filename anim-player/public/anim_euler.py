@@ -5,6 +5,7 @@ same logic as in three.js
 
 import math
 import os
+import json
 
 
 class Euler:
@@ -12,6 +13,9 @@ class Euler:
         self.x = x
         self.y = y
         self.z = z
+
+    def to_array(self):
+        return [self.x, self.y, self.z]
 
 
 class Vector3:
@@ -216,5 +220,35 @@ if __name__ == "__main__":
         if filename.endswith(".json"):
             filenames.append(filename)
 
-    with open(os.path.join(data_dir_euler, fname), "w") as f:
-        json.dump(data, f, indent=2)
+    for fname in filenames:
+
+        data = json.load(open(os.path.join(data_dir, fname), "r"))
+
+        tracks = data["tracks"]
+
+        tracks_euler = []
+
+        for track in tracks:
+            if track["type"] == "quaternion":
+
+                track_euler = {}
+                track_euler["name"] = track["name"].replace(".quaternion", "")
+                track_euler["times"] = track["times"]
+                track_euler["values"] = []
+
+                for i in range(0, len(track["values"]), 4):
+                    quaternion = Quaternion(
+                        track["values"][i],
+                        track["values"][i + 1],
+                        track["values"][i + 2],
+                        track["values"][i + 3],
+                    )
+
+                    euler = euler_from_quaternion(quaternion)
+
+                    track_euler["values"].append(euler.to_array())
+
+                tracks_euler.append(track_euler)
+
+        with open(os.path.join(data_dir_euler, fname), "w") as f:
+            json.dump(tracks_euler, f, indent=2)

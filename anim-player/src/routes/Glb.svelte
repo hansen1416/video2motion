@@ -42,7 +42,7 @@
 		threeScene.scene.position.set(0, -1, 0);
 
 		Promise.all([
-			loadGLTF(`/glb/646c7dffa386cf7c3cfb3923.glb`),
+			loadGLTF(`/glb/dors.glb`),
 			loadJSON(`/anim-json/Zombie Walk.json`),
 		]).then(([glb_model, anim_data]) => {
 			glb_model = glb_model.scene.children[0];

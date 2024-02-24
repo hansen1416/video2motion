@@ -4,6 +4,7 @@
 	import Loader from "./routes/Loader.svelte";
 	import Camera from "./routes/Camera.svelte";
 	import Glb from "./routes/Glb.svelte";
+	import GlbEuler from "./routes/GlbEuler.svelte";
 </script>
 
 <Router>
@@ -19,6 +20,7 @@
 		</Route>
 		<Route path="/" component={Loader} />
 		<Route path="/glb" component={Glb} />
+		<Route path="/glb-euler" component={GlbEuler} />
 		<Route path="/camera" component={Camera} />
 	</div>
 </Router>
