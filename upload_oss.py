@@ -42,9 +42,8 @@ def upload_screen_shot():
 
                 for file in os.listdir(azimuth_path):
 
-                    object_name = os.path.join(
-                        humanoid_name, animation_name, elevation, azimuth, file
-                    )
+                    object_name = f"screenshot/{humanoid_name}/{animation_name}/{elevation}/{azimuth}/{file}"
+
                     local_file = os.path.join(azimuth_path, file)
 
                     # check if `object_name` already exists in the bucket
