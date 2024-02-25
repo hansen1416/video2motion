@@ -46,29 +46,31 @@ if __name__ == "__main__":
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
     # Create data loaders (replace with your actual data paths)
-    train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)
+    train_loader = DataLoader(train_dataset, batch_size=256, shuffle=True)
 
     print(train_loader)
 
     # val_dataset = CustomDataset("path/to/val/data")
     # val_loader = DataLoader(val_dataset, batch_size=32, shuffle=False)
 
-# # Train the model
-# for epoch in range(epochs):
-#     for data, _ in train_loader:  # Ignore labels for now
-#         # Forward pass
-#         outputs = model(data)
+    # Train the model
+    for epoch in range(epochs):
+        for features, targets in train_loader:  # Ignore labels for now
+            # Forward pass
+            outputs = model(features)
 
-#         # Calculate loss
-#         loss = loss_fn(outputs, data)  # Compare outputs with input data (assume labels unavailable)
+            # Calculate loss
+            loss = loss_fn(
+                outputs, targets
+            )  # Compare outputs with input data (assume labels unavailable)
 
-#         # Backward pass and optimize
-#         optimizer.zero_grad()
-#         loss.backward()
-#         optimizer.step()
+            # Backward pass and optimize
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
 
-#         # Print training progress (optional)
-#         print(f"Epoch {epoch+1}/{epochs}, Loss: {loss.item():.4f}")
+            # Print training progress (optional)
+            print(f"Epoch {epoch+1}/{epochs}, Loss: {loss.item():.4f}")
 
 # # Evaluate the model (assuming you have validation data)
 # with torch.no_grad():

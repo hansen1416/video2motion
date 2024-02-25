@@ -238,7 +238,16 @@ class MediapipeDataset(Dataset):
         # get data from n_frame
         for bone_name in HUMANOID_BONES:
 
-            rotation = animation_data[bone_name]["values"][int(n_frame)]
+            try:
+                rotation = animation_data[bone_name]["values"][int(n_frame)]
+            except IndexError as e:
+                # print(
+                #     f"IndexError: {animation_name} {bone_name} {n_frame}, real length {len(animation_data[bone_name]['values'])}"
+                # )
+                # raise e
+                rotation = animation_data[bone_name]["values"][
+                    len(animation_data[bone_name]["values"]) - 1
+                ]
 
             bone_rotations.append(rotation[0])
             bone_rotations.append(rotation[1])
@@ -273,14 +282,24 @@ if __name__ == "__main__":
     )
 
     animation_dir = os.path.join(
-        os.path.dirname(__file__), "..", "anim-player", "public", "anim-json-euler"
+        os.path.dirname(__file__),
+        "..",
+        "..",
+        "anim-player",
+        "public",
+        "anim-json-euler",
     )
 
     # print(mediapipe_paths)
 
     m_dataset = MediapipeDataset("dors.glb", mediapipe_dir, animation_dir)
 
-    # get the first item from the dataset
-    landmarks, rotations = m_dataset[0]
+    for i in range(len(m_dataset)):
+        # print(i)
+        landmarks, rotations = m_dataset[i]
+        # print(landmarks.shape, rotations.shape)
 
-    print(landmarks.shape, rotations.shape)
+    # get the first item from the dataset
+    # landmarks, rotations = m_dataset[0]
+
+    # print(landmarks.shape, rotations.shape)
