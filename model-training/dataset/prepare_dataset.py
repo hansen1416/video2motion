@@ -126,7 +126,9 @@ HUMANOID_BONES = [
 
 def generate_meidiapipe_paths(humanoid_name, mediapipe_dir):
 
-    filename = os.path.join("mapping", "mediapipe_paths.pkl")
+    # get current absolute path
+
+    filename = os.path.join(os.path.dirname(__file__), "mapping", "mediapipe_paths.pkl")
 
     if os.path.isfile(filename):
         print(f"{filename} already exists")
@@ -164,10 +166,12 @@ def generate_meidiapipe_paths(humanoid_name, mediapipe_dir):
 
     print(f"Saved {filename}")
 
+    return filename
+
 
 class MediapipeDataset(Dataset):
 
-    def __init__(self, mediapipe_paths, animation_dir) -> None:
+    def __init__(self, humanoid_name, mediapipe_dir, animation_dir) -> None:
         """
         iterate over mediapipe_dir folder,
         if for a given azimuth/eleveation/n_frame there is mediapipe result
@@ -177,7 +181,19 @@ class MediapipeDataset(Dataset):
         maintain a index -> animation_name/azimuth/elevation/n_frame mapping
         """
 
+        generate_meidiapipe_paths(humanoid_name, mediapipe_dir)
+
+        # with open(os.path.join("mapping", "mediapipe_paths.json"), "r") as f:
+        # mediapipe_paths = json.load(f)
+        with open(
+            os.path.join(os.path.dirname(__file__), "mapping", "mediapipe_paths.pkl"),
+            "rb",
+        ) as f:
+            mediapipe_paths = pickle.load(f)
+
         self.data_paths = mediapipe_paths
+        self.humanoid_name = humanoid_name
+        self.mediapipe_dir = mediapipe_dir
         self.animation_dir = animation_dir
 
         # display how much memory is used by self.data_paths
@@ -192,8 +208,8 @@ class MediapipeDataset(Dataset):
         animation_name, elevation, azimuth, n_frame = self.data_paths[idx]
 
         landmark_file = os.path.join(
-            mediapipe_dir,
-            "dors.glb",
+            self.mediapipe_dir,
+            self.humanoid_name,
             animation_name,
             elevation,
             azimuth,
@@ -260,16 +276,11 @@ if __name__ == "__main__":
         os.path.dirname(__file__), "..", "anim-player", "public", "anim-json-euler"
     )
 
-    generate_meidiapipe_paths("dors.glb", mediapipe_dir)
-
-    # with open(os.path.join("mapping", "mediapipe_paths.json"), "r") as f:
-    # mediapipe_paths = json.load(f)
-    with open(os.path.join("mapping", "mediapipe_paths.pkl"), "rb") as f:
-        mediapipe_paths = pickle.load(f)
-
     # print(mediapipe_paths)
 
-    m_dataset = MediapipeDataset(mediapipe_paths, animation_dir)
+    m_dataset = MediapipeDataset("dors.glb", mediapipe_dir, animation_dir)
 
     # get the first item from the dataset
     landmarks, rotations = m_dataset[0]
+
+    print(landmarks.shape, rotations.shape)
