@@ -272,6 +272,49 @@ class MediapipeDataset(Dataset):
         # }
 
 
+"""
+Memory-Mapped Files:
+import mmap
+
+class MyDataset(Dataset):
+    def __init__(self, filepath):
+        self.file = open(filepath, "rb")
+        self.data_mmap = mmap.mmap(self.file.fileno(), 0, access=mmap.ACCESS_READ)
+
+    def __getitem__(self, index):
+        # Calculate offset and size based on your data structure
+        offset, size = ...
+        data = self.data_mmap[offset:offset+size]
+        # Process or return data as needed
+
+    def __len__(self):
+        # Calculate total data size or number of elements based on file size and structure
+
+# Close the file when done
+dataset = MyDataset("large_file.data")
+...
+dataset.file.close()
+"""
+
+
+"""
+Streaming:
+class MyDataset(Dataset):
+    def __init__(self, filepath):
+        self.file = open(filepath, "rb")
+
+    def __getitem__(self, index):
+        # Read data in chunks based on your needs
+        data = self.file.read(chunk_size)
+        # Process or return data as needed
+
+    def __len__(self):
+        # Calculate total data size or number of elements based on file size and structure
+
+# No need to close the file explicitly since it's handled by the garbage collector
+dataset = MyDataset("large_file.data")
+"""
+
 if __name__ == "__main__":
 
     mediapipe_dir = os.path.join(

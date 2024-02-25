@@ -157,10 +157,12 @@ model_path = os.path.join(
 )
 
 source_image_dir = os.path.join(
-    os.path.dirname(__file__), "../", "video-recorder", "data"
+    os.path.dirname(__file__), "..", "..", "video-recorder", "data"
 )
 
-queue_dir = os.path.join(os.path.dirname(__file__), "../", "video-recorder", "queue")
+queue_dir = os.path.join(
+    os.path.dirname(__file__), "..", "..", "video-recorder", "queue"
+)
 
 charater_names = ["dors.glb"]
 
