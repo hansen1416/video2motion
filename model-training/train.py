@@ -21,37 +21,37 @@ if __name__ == "__main__":
         os.path.dirname(__file__), "..", "anim-player", "public", "anim-json-euler"
     )
 
-    m_dataset = MediapipeDataset("dors.glb", mediapipe_dir, animation_dir)
+    train_dataset = MediapipeDataset("dors.glb", mediapipe_dir, animation_dir)
 
     # get the first item from the dataset
-    landmarks, rotations = m_dataset[0]
+    landmarks, rotations = train_dataset[0]
 
     print(landmarks.shape, rotations.shape)
 
+    # Assuming you have your CustomDataset class defined
 
-# # Assuming you have your CustomDataset class defined
+    # Hyperparameters (adjust based on your needs)
+    learning_rate = 0.01
+    epochs = 10
 
-# # Hyperparameters (adjust based on your needs)
-# learning_rate = 0.01
-# epochs = 10
+    # Create a small neural network
+    model = torch.nn.Sequential(
+        Linear(99, 128),  # Input layer to hidden layer with 32 units
+        torch.nn.ReLU(),  # Activation function
+        Linear(128, 66),  # Hidden layer to output layer with 66 units
+    )
 
-# # Create a small neural network
-# model = torch.nn.Sequential(
-#     Linear(99, 32),  # Input layer to hidden layer with 32 units
-#     torch.nn.ReLU(),  # Activation function
-#     Linear(32, 66),  # Hidden layer to output layer with 66 units
-# )
+    # Define loss function and optimizer
+    loss_fn = torch.nn.MSELoss()  # Mean squared error for regression
+    optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
-# # Define loss function and optimizer
-# loss_fn = torch.nn.MSELoss()  # Mean squared error for regression
-# optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
+    # Create data loaders (replace with your actual data paths)
+    train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)
 
-# # Create data loaders (replace with your actual data paths)
-# train_dataset = CustomDataset("path/to/train/data")
-# train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)
+    print(train_loader)
 
-# val_dataset = CustomDataset("path/to/val/data")
-# val_loader = DataLoader(val_dataset, batch_size=32, shuffle=False)
+    # val_dataset = CustomDataset("path/to/val/data")
+    # val_loader = DataLoader(val_dataset, batch_size=32, shuffle=False)
 
 # # Train the model
 # for epoch in range(epochs):
