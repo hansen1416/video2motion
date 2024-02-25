@@ -1,6 +1,8 @@
 import os
 import json
+import pickle
 
+import numpy as np
 import torch
 from torch.utils.data import Dataset, DataLoader
 from pathlib import Path
@@ -41,10 +43,131 @@ BlazePoseKeypoints = {
     32: "RIGHT_FOOT_INDEX",
 }
 
+HUMANOID_BONES_ALL = [
+    "Hips",
+    "Spine",
+    "Spine1",
+    "Spine2",
+    "Neck",
+    "Head",
+    "RightShoulder",
+    "RightArm",
+    "RightForeArm",
+    "RightHand",
+    "RightHandThumb1",
+    "RightHandThumb2",
+    "RightHandThumb3",
+    "RightHandIndex1",
+    "RightHandIndex2",
+    "RightHandIndex3",
+    "RightHandMiddle1",
+    "RightHandMiddle2",
+    "RightHandMiddle3",
+    "RightHandRing1",
+    "RightHandRing2",
+    "RightHandRing3",
+    "RightHandPinky1",
+    "RightHandPinky2",
+    "RightHandPinky3",
+    "LeftShoulder",
+    "LeftArm",
+    "LeftForeArm",
+    "LeftHand",
+    "LeftHandThumb1",
+    "LeftHandThumb2",
+    "LeftHandThumb3",
+    "LeftHandIndex1",
+    "LeftHandIndex2",
+    "LeftHandIndex3",
+    "LeftHandMiddle1",
+    "LeftHandMiddle2",
+    "LeftHandMiddle3",
+    "LeftHandRing1",
+    "LeftHandRing2",
+    "LeftHandRing3",
+    "LeftHandPinky1",
+    "LeftHandPinky2",
+    "LeftHandPinky3",
+    "RightUpLeg",
+    "RightLeg",
+    "RightFoot",
+    "RightToeBase",
+    "LeftUpLeg",
+    "LeftLeg",
+    "LeftFoot",
+    "LeftToeBase",
+]
+
+HUMANOID_BONES = [
+    "Hips",
+    "Spine",
+    "Spine1",
+    "Spine2",
+    "Neck",
+    "Head",
+    "RightShoulder",
+    "RightArm",
+    "RightForeArm",
+    "RightHand",
+    "LeftShoulder",
+    "LeftArm",
+    "LeftForeArm",
+    "LeftHand",
+    "RightUpLeg",
+    "RightLeg",
+    "RightFoot",
+    "RightToeBase",
+    "LeftUpLeg",
+    "LeftLeg",
+    "LeftFoot",
+    "LeftToeBase",
+]
+
+
+def generate_meidiapipe_paths(humanoid_name, mediapipe_dir):
+
+    filename = os.path.join("mapping", "mediapipe_paths.pkl")
+
+    if os.path.isfile(filename):
+        print(f"{filename} already exists")
+        return
+
+    data_paths = []
+
+    humanoid_path = os.path.join(mediapipe_dir, humanoid_name)
+
+    for animation_name in os.listdir(humanoid_path):
+
+        animation_name_path = os.path.join(humanoid_path, animation_name)
+
+        for elevation in os.listdir(animation_name_path):
+
+            elevation_path = os.path.join(animation_name_path, elevation)
+
+            for azimuth in os.listdir(elevation_path):
+
+                azimuth_path = os.path.join(elevation_path, azimuth)
+
+                for n_frame in os.listdir(azimuth_path):
+
+                    landmark_file = os.path.join(
+                        azimuth_path, n_frame, "world_landmarks.json"
+                    )
+
+                    if not os.path.isfile(landmark_file):
+                        continue
+
+                    data_paths.append((animation_name, elevation, azimuth, n_frame))
+
+    with open(filename, "wb") as f:
+        pickle.dump(data_paths, f)
+
+    print(f"Saved {filename}")
+
 
 class MediapipeDataset(Dataset):
 
-    def __init__(self, humanoid_name, mediapipe_dir, animation_dir) -> None:
+    def __init__(self, mediapipe_paths, animation_dir) -> None:
         """
         iterate over mediapipe_dir folder,
         if for a given azimuth/eleveation/n_frame there is mediapipe result
@@ -54,40 +177,8 @@ class MediapipeDataset(Dataset):
         maintain a index -> animation_name/azimuth/elevation/n_frame mapping
         """
 
-        self.data_paths = []
-
-        humanoid_path = os.path.join(mediapipe_dir, humanoid_name)
-
-        for animation_name in os.listdir(humanoid_path):
-
-            animation_name_path = os.path.join(humanoid_path, animation_name)
-
-            for elevation in os.listdir(animation_name_path):
-
-                elevation_path = os.path.join(animation_name_path, elevation)
-
-                for azimuth in os.listdir(elevation_path):
-
-                    azimuth_path = os.path.join(elevation_path, azimuth)
-
-                    for n_frame in os.listdir(azimuth_path):
-
-                        landmark_file = os.path.join(
-                            azimuth_path, n_frame, "world_landmarks.json"
-                        )
-
-                        if not os.path.isfile(landmark_file):
-                            continue
-
-                        # world_landmarks = json.load(landmark_file)
-
-                        # print(landmarks)
-
-                        # print(world_landmarks)
-
-                        self.data_paths.append(
-                            (animation_name, azimuth, elevation, n_frame)
-                        )
+        self.data_paths = mediapipe_paths
+        self.animation_dir = animation_dir
 
         # display how much memory is used by self.data_paths
         # print(
@@ -98,7 +189,7 @@ class MediapipeDataset(Dataset):
         return len(self.data_paths)
 
     def __getitem__(self, idx):
-        animation_name, azimuth, elevation, n_frame = self.data_paths[idx]
+        animation_name, elevation, azimuth, n_frame = self.data_paths[idx]
 
         landmark_file = os.path.join(
             mediapipe_dir,
@@ -113,14 +204,34 @@ class MediapipeDataset(Dataset):
         with open(landmark_file, "r") as f:
             landmarks = json.load(f)
 
-        # todo convert landmarks to tensor
+        landmarks1d = []
+        # flattten landmarks
+        for l in landmarks:
+            landmarks1d.append(l["x"])
+            landmarks1d.append(l["y"])
+            landmarks1d.append(l["z"])
 
-        with open(os.path.join(animation_dir, animation_name), "r") as f:
+        # convert landmarks to tensor
+        landmarks1d = torch.tensor(landmarks1d, dtype=torch.float32)
+
+        with open(os.path.join(self.animation_dir, animation_name), "r") as f:
             animation_data = json.load(f)
 
-        # todo get data from n_frame
+        bone_rotations = []
 
-        return landmarks, animation_data
+        # get data from n_frame
+        for bone_name in HUMANOID_BONES:
+
+            rotation = animation_data[bone_name]["values"][int(n_frame)]
+
+            bone_rotations.append(rotation[0])
+            bone_rotations.append(rotation[1])
+            bone_rotations.append(rotation[2])
+
+        # convert bone_rotations to tensor
+        bone_rotations = torch.tensor(bone_rotations, dtype=torch.float32)
+
+        return landmarks1d, bone_rotations
 
         # animation_file = os.path.join(animation_dir, f"{animation_name}.json")
 
@@ -136,20 +247,29 @@ class MediapipeDataset(Dataset):
         # }
 
 
-mediapipe_dir = os.path.join(
-    os.path.dirname(__file__),
-    "..",
-    "mediapipe",
-    "results",
-)
+if __name__ == "__main__":
 
-animation_dir = os.path.join(
-    os.path.dirname(__file__), "..", "anim-player", "public", "anim-json-euler"
-)
+    mediapipe_dir = os.path.join(
+        os.path.dirname(__file__),
+        "..",
+        "mediapipe",
+        "results",
+    )
 
-m_dataset = MediapipeDataset("dors.glb", mediapipe_dir, animation_dir)
+    animation_dir = os.path.join(
+        os.path.dirname(__file__), "..", "anim-player", "public", "anim-json-euler"
+    )
 
-# get the first item from the dataset
-item = m_dataset[0]
+    generate_meidiapipe_paths("dors.glb", mediapipe_dir)
 
-print(item)
+    # with open(os.path.join("mapping", "mediapipe_paths.json"), "r") as f:
+    # mediapipe_paths = json.load(f)
+    with open(os.path.join("mapping", "mediapipe_paths.pkl"), "rb") as f:
+        mediapipe_paths = pickle.load(f)
+
+    # print(mediapipe_paths)
+
+    m_dataset = MediapipeDataset(mediapipe_paths, animation_dir)
+
+    # get the first item from the dataset
+    landmarks, rotations = m_dataset[0]

@@ -226,15 +226,15 @@ if __name__ == "__main__":
 
         tracks = data["tracks"]
 
-        tracks_euler = []
+        tracks_euler = {}
 
         for track in tracks:
             if track["type"] == "quaternion":
 
-                track_euler = {}
-                track_euler["name"] = track["name"].replace(".quaternion", "")
-                track_euler["times"] = track["times"]
-                track_euler["values"] = []
+                track_info = {
+                    "times": track["times"],
+                    "values": [],
+                }
 
                 for i in range(0, len(track["values"]), 4):
                     quaternion = Quaternion(
@@ -246,9 +246,9 @@ if __name__ == "__main__":
 
                     euler = euler_from_quaternion(quaternion)
 
-                    track_euler["values"].append(euler.to_array())
+                    track_info["values"].append(euler.to_array())
 
-                tracks_euler.append(track_euler)
+                tracks_euler[track["name"].replace(".quaternion", "")] = track_info
 
         with open(os.path.join(data_dir_euler, fname), "w") as f:
             json.dump(tracks_euler, f, indent=2)
