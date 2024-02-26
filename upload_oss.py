@@ -177,8 +177,43 @@ def upload_mediapipe():
                 )
 
 
+def upload_anim_data(sub_folder_name):
+
+    pubnlic_dir = os.path.join(os.path.dirname(__file__), "anim-player", "public")
+
+    anim_dir = os.path.join(pubnlic_dir, sub_folder_name)
+
+    for filename in os.listdir(anim_dir):
+        object_name = f"{sub_folder_name}/{filename}"
+        local_file = os.path.join(anim_dir, filename)
+
+        # check if `object_name` already exists in the bucket
+        if bucket.object_exists(object_name):
+            print(f"{object_name} already exists in the bucket")
+            continue
+
+        # print(object_name, local_file)
+
+        # 上传文件到OSS。
+        # yourObjectName由包含文件后缀，不包含Bucket名称组成的Object完整路径，例如abc/efg/123.jpg。
+        # yourLocalFile由本地文件路径加文件名包括后缀组成，例如/users/local/myfile.txt。
+        result = bucket.put_object_from_file(object_name, local_file)
+
+        # HTTP返回码。
+        print("{} => {} http status: {}".format(local_file, object_name, result.status))
+
+        if int(result.status) != 200:
+            # output the local file path to local log
+            with open(f"upload-{sub_folder_name}-error.log", "a") as f:
+                f.write(f"{local_file}\n")
+
+
 if __name__ == "__main__":
 
     # upload_screen_shot()
 
-    upload_mediapipe()
+    # upload_mediapipe()
+
+    upload_anim_data("anim-json")
+    upload_anim_data("anim-json-mixamo")
+    upload_anim_data("anim-json-euler")

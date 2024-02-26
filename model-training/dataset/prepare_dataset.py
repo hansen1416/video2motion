@@ -1,11 +1,14 @@
 import os
 import json
 import pickle
+from dotenv import load_dotenv
+from itertools import islice
 
 import numpy as np
 import torch
-from torch.utils.data import Dataset, DataLoader
-from pathlib import Path
+from torch.utils.data import Dataset
+import oss2
+from oss2.credentials import EnvironmentVariableCredentialsProvider
 
 BlazePoseKeypoints = {
     0: "NOSE",
@@ -317,32 +320,46 @@ dataset = MyDataset("large_file.data")
 
 if __name__ == "__main__":
 
-    mediapipe_dir = os.path.join(
-        os.path.dirname(__file__),
-        "..",
-        "mediapipe",
-        "results",
-    )
+    # mediapipe_dir = os.path.join(
+    #     os.path.dirname(__file__),
+    #     "..",
+    #     "mediapipe",
+    #     "results",
+    # )
 
-    animation_dir = os.path.join(
-        os.path.dirname(__file__),
-        "..",
-        "..",
-        "anim-player",
-        "public",
-        "anim-json-euler",
-    )
+    # animation_dir = os.path.join(
+    #     os.path.dirname(__file__),
+    #     "..",
+    #     "..",
+    #     "anim-player",
+    #     "public",
+    #     "anim-json-euler",
+    # )
 
-    # print(mediapipe_paths)
+    # # print(mediapipe_paths)
 
-    m_dataset = MediapipeDataset("dors.glb", mediapipe_dir, animation_dir)
+    # m_dataset = MediapipeDataset("dors.glb", mediapipe_dir, animation_dir)
 
-    for i in range(len(m_dataset)):
-        # print(i)
-        landmarks, rotations = m_dataset[i]
-        # print(landmarks.shape, rotations.shape)
+    # for i in range(len(m_dataset)):
+    #     # print(i)
+    #     landmarks, rotations = m_dataset[i]
+    #     # print(landmarks.shape, rotations.shape)
 
-    # get the first item from the dataset
-    # landmarks, rotations = m_dataset[0]
+    # # get the first item from the dataset
+    # # landmarks, rotations = m_dataset[0]
 
-    # print(landmarks.shape, rotations.shape)
+    # # print(landmarks.shape, rotations.shape)
+
+    # Load the environment variables from the .env file
+    load_dotenv()
+
+    # 使用环境变量中获取的RAM用户的访问密钥配置访问凭证。
+    auth = oss2.ProviderAuth(EnvironmentVariableCredentialsProvider())
+
+    # yourEndpoint填写Bucket所在地域对应的Endpoint。以华东1（杭州）为例，Endpoint填写为https://oss-cn-hangzhou.aliyuncs.com。
+    endpoint = "oss-ap-southeast-1.aliyuncs.com"
+
+    # 填写Bucket名称，并设置连接超时时间为30秒。
+    bucket = oss2.Bucket(auth, endpoint, "pose-daten", connect_timeout=30)
+
+    # print(bucket)
