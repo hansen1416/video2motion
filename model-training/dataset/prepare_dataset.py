@@ -10,6 +10,50 @@ from torch.utils.data import Dataset
 import oss2
 from oss2.credentials import EnvironmentVariableCredentialsProvider
 
+
+"""
+Memory-Mapped Files:
+import mmap
+
+class MyDataset(Dataset):
+    def __init__(self, filepath):
+        self.file = open(filepath, "rb")
+        self.data_mmap = mmap.mmap(self.file.fileno(), 0, access=mmap.ACCESS_READ)
+
+    def __getitem__(self, index):
+        # Calculate offset and size based on your data structure
+        offset, size = ...
+        data = self.data_mmap[offset:offset+size]
+        # Process or return data as needed
+
+    def __len__(self):
+        # Calculate total data size or number of elements based on file size and structure
+
+# Close the file when done
+dataset = MyDataset("large_file.data")
+...
+dataset.file.close()
+"""
+
+
+"""
+Streaming:
+class MyDataset(Dataset):
+    def __init__(self, filepath):
+        self.file = open(filepath, "rb")
+
+    def __getitem__(self, index):
+        # Read data in chunks based on your needs
+        data = self.file.read(chunk_size)
+        # Process or return data as needed
+
+    def __len__(self):
+        # Calculate total data size or number of elements based on file size and structure
+
+# No need to close the file explicitly since it's handled by the garbage collector
+dataset = MyDataset("large_file.data")
+"""
+
 BlazePoseKeypoints = {
     0: "NOSE",
     1: "LEFT_EYE_INNER",
@@ -127,21 +171,22 @@ HUMANOID_BONES = [
 ]
 
 
-def generate_meidiapipe_paths(humanoid_name, mediapipe_dir):
+def generate_meidiapipe_paths(humanoid_name, mediapipe_dir, animation_names):
 
     # get current absolute path
 
-    filename = os.path.join(os.path.dirname(__file__), "mapping", "mediapipe_paths.pkl")
+    # filename = os.path.join(os.path.dirname(__file__), "mapping", "mediapipe_paths.pkl")
 
-    if os.path.isfile(filename):
-        print(f"{filename} already exists")
-        return
+    # if os.path.isfile(filename):
+    #     print(f"{filename} already exists")
+    #     return
 
     data_paths = []
 
     humanoid_path = os.path.join(mediapipe_dir, humanoid_name)
 
-    for animation_name in os.listdir(humanoid_path):
+    # for animation_name in os.listdir(humanoid_path):
+    for animation_name in animation_names:
 
         animation_name_path = os.path.join(humanoid_path, animation_name)
 
@@ -164,12 +209,127 @@ def generate_meidiapipe_paths(humanoid_name, mediapipe_dir):
 
                     data_paths.append((animation_name, elevation, azimuth, n_frame))
 
-    with open(filename, "wb") as f:
-        pickle.dump(data_paths, f)
+    return data_paths
 
-    print(f"Saved {filename}")
+    # with open(filename, "wb") as f:
+    #     pickle.dump(data_paths, f)
 
-    return filename
+    # print(f"Saved {filename}")
+
+    # return filename
+
+
+def build_dataset():
+
+    anim_euler_dir = os.path.join(
+        os.path.dirname(__file__),
+        "..",
+        "..",
+        "anim-player",
+        "public",
+        "anim-json-euler",
+    )
+
+    mediapipe_dir = os.path.join(
+        os.path.dirname(__file__),
+        "..",
+        "mediapipe",
+        "results",
+    )
+
+    animation_names = [filename for filename in os.listdir(anim_euler_dir)]
+
+    humanoid_name = "dors.glb"
+
+    # seperate the animation names into 6 trunks
+    trunks = np.array_split(animation_names, 6)
+
+    for i in range(len(trunks)):
+        trunks[i] = trunks[i].tolist()
+
+    # save trunks to json file
+    with open(os.path.join(os.path.dirname(__file__), "data", "trunks.json"), "w") as f:
+        json.dump(trunks, f)
+
+    for i in range(len(trunks)):
+        data_paths = generate_meidiapipe_paths("dors.glb", mediapipe_dir, trunks[i])
+
+        features = []
+
+        targets = []
+
+        for animation_name, elevation, azimuth, n_frame in data_paths:
+
+            landmark_file = os.path.join(
+                mediapipe_dir,
+                humanoid_name,
+                animation_name,
+                elevation,
+                azimuth,
+                n_frame,
+                "world_landmarks.json",
+            )
+
+            with open(landmark_file, "r") as f:
+                landmarks = json.load(f)
+
+            landmarks1d = []
+            # flattten landmarks
+            for l in landmarks:
+                landmarks1d.append(l["x"])
+                landmarks1d.append(l["y"])
+                landmarks1d.append(l["z"])
+
+            # convert landmarks to tensor
+            landmarks1d = torch.tensor(landmarks1d, dtype=torch.float32)
+
+            features.append(landmarks1d)
+
+            # print(landmarks1d)
+
+            with open(os.path.join(anim_euler_dir, animation_name), "r") as f:
+                animation_data = json.load(f)
+
+            bone_rotations = []
+
+            # get data from n_frame
+            for bone_name in HUMANOID_BONES:
+
+                try:
+                    rotation = animation_data[bone_name]["values"][int(n_frame)]
+                except IndexError as e:
+                    # print(
+                    #     f"IndexError: {animation_name} {bone_name} {n_frame}, real length {len(animation_data[bone_name]['values'])}"
+                    # )
+                    # raise e
+                    rotation = animation_data[bone_name]["values"][
+                        len(animation_data[bone_name]["values"]) - 1
+                    ]
+
+                bone_rotations.append(rotation[0])
+                bone_rotations.append(rotation[1])
+                bone_rotations.append(rotation[2])
+
+            # convert bone_rotations to tensor
+            bone_rotations = torch.tensor(bone_rotations, dtype=torch.float32)
+
+            targets.append(bone_rotations)
+
+        features = np.array(features)
+        targets = np.array(targets)
+
+        print(features.shape, targets.shape)
+
+        # save features and targets to file
+        np.save(
+            os.path.join(os.path.dirname(__file__), "data", f"features_{i}.npy"),
+            features,
+        )
+        np.save(
+            os.path.join(os.path.dirname(__file__), "data", f"targets_{i}.npy"), targets
+        )
+
+    # print(len(animation_names))
 
 
 class MediapipeDataset(Dataset):
@@ -275,49 +435,6 @@ class MediapipeDataset(Dataset):
         # }
 
 
-"""
-Memory-Mapped Files:
-import mmap
-
-class MyDataset(Dataset):
-    def __init__(self, filepath):
-        self.file = open(filepath, "rb")
-        self.data_mmap = mmap.mmap(self.file.fileno(), 0, access=mmap.ACCESS_READ)
-
-    def __getitem__(self, index):
-        # Calculate offset and size based on your data structure
-        offset, size = ...
-        data = self.data_mmap[offset:offset+size]
-        # Process or return data as needed
-
-    def __len__(self):
-        # Calculate total data size or number of elements based on file size and structure
-
-# Close the file when done
-dataset = MyDataset("large_file.data")
-...
-dataset.file.close()
-"""
-
-
-"""
-Streaming:
-class MyDataset(Dataset):
-    def __init__(self, filepath):
-        self.file = open(filepath, "rb")
-
-    def __getitem__(self, index):
-        # Read data in chunks based on your needs
-        data = self.file.read(chunk_size)
-        # Process or return data as needed
-
-    def __len__(self):
-        # Calculate total data size or number of elements based on file size and structure
-
-# No need to close the file explicitly since it's handled by the garbage collector
-dataset = MyDataset("large_file.data")
-"""
-
 if __name__ == "__main__":
 
     # mediapipe_dir = os.path.join(
@@ -350,16 +467,5 @@ if __name__ == "__main__":
 
     # # print(landmarks.shape, rotations.shape)
 
-    # Load the environment variables from the .env file
-    load_dotenv()
-
-    # 使用环境变量中获取的RAM用户的访问密钥配置访问凭证。
-    auth = oss2.ProviderAuth(EnvironmentVariableCredentialsProvider())
-
-    # yourEndpoint填写Bucket所在地域对应的Endpoint。以华东1（杭州）为例，Endpoint填写为https://oss-cn-hangzhou.aliyuncs.com。
-    endpoint = "oss-ap-southeast-1.aliyuncs.com"
-
-    # 填写Bucket名称，并设置连接超时时间为30秒。
-    bucket = oss2.Bucket(auth, endpoint, "pose-daten", connect_timeout=30)
-
-    # print(bucket)
+    build_dataset()
+    pass
