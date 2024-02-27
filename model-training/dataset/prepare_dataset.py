@@ -282,7 +282,10 @@ def build_dataset(bucket):
     humanoid_name = "dors.glb"
 
     queue_dir = os.path.join(
-        os.path.dirname(__file__), "..", "..", "video-recorder", "queue", humanoid_name
+        os.path.dirname(__file__),
+        "..",
+        "..",
+        "queues",
     )
 
     data_dir = os.path.join(os.path.dirname(__file__), "data")
