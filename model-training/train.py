@@ -1,27 +1,18 @@
 import os
-import pickle
 
-import numpy as np
 import torch
 from torch.nn import Linear
 from torch.utils.data import DataLoader
 
 
-from dataset.prepare_dataset import MediapipeDataset
+from dataset import DATA_DIR, MediapipeDataset
 
 if __name__ == "__main__":
 
-    mediapipe_dir = os.path.join(
-        os.path.dirname(__file__),
-        "mediapipe",
-        "results",
+    train_dataset = MediapipeDataset(
+        os.path.join(DATA_DIR, "inputs_queue0.npy"),
+        os.path.join(DATA_DIR, "outputs_queue0.npy"),
     )
-
-    animation_dir = os.path.join(
-        os.path.dirname(__file__), "..", "anim-player", "public", "anim-json-euler"
-    )
-
-    train_dataset = MediapipeDataset("dors.glb", mediapipe_dir, animation_dir)
 
     # get the first item from the dataset
     landmarks, rotations = train_dataset[0]
@@ -46,7 +37,7 @@ if __name__ == "__main__":
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
     # Create data loaders (replace with your actual data paths)
-    train_loader = DataLoader(train_dataset, batch_size=256, shuffle=True)
+    train_loader = DataLoader(train_dataset, batch_size=4, shuffle=True)
 
     print(train_loader)
 

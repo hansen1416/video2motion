@@ -1,14 +1,9 @@
 import os
 import json
-import pickle
 from dotenv import load_dotenv
-from itertools import islice
-import time
 
 from tqdm import tqdm
 import numpy as np
-import torch
-from torch.utils.data import Dataset
 import oss2
 from oss2.credentials import EnvironmentVariableCredentialsProvider
 from dotenv import load_dotenv
@@ -231,7 +226,7 @@ def get_landmarks1d(landmarks):
     Args:
         landmarks: list of dict
     Returns:
-        landmarks1d: torch.tensor
+        landmarks1d: ndarray
     """
     landmarks1d = []
     # flattten landmarks
@@ -241,7 +236,7 @@ def get_landmarks1d(landmarks):
         landmarks1d.append(l["z"])
 
     # convert landmarks to tensor
-    landmarks1d = torch.tensor(landmarks1d, dtype=torch.float32)
+    landmarks1d = np.array(landmarks1d, dtype=np.float32)
 
     return landmarks1d
 
@@ -254,7 +249,7 @@ def extract_anim_euler_frames(anim_euler_data, n_frame):
         anim_euler_data: dict
         n_frame: int
     Returns:
-        bone_rotations: torch.tensor
+        bone_rotations: ndarray
     """
     bone_rotations = []
 
@@ -277,7 +272,7 @@ def extract_anim_euler_frames(anim_euler_data, n_frame):
         bone_rotations.append(rotation[2])
 
     # convert bone_rotations to tensor
-    bone_rotations = torch.tensor(bone_rotations, dtype=torch.float32)
+    bone_rotations = np.array(bone_rotations, dtype=np.float32)
 
     return bone_rotations
 
@@ -345,109 +340,6 @@ def build_dataset(bucket):
         )
 
         break
-
-
-class MediapipeDataset(Dataset):
-
-    def __init__(self, humanoid_name, mediapipe_dir, animation_dir) -> None:
-        """
-        iterate over mediapipe_dir folder,
-        if for a given azimuth/eleveation/n_frame there is mediapipe result
-
-        find the corresponding animation data from animation_dir
-
-        maintain a index -> animation_name/azimuth/elevation/n_frame mapping
-        """
-
-        generate_meidiapipe_paths(humanoid_name, mediapipe_dir)
-
-        # with open(os.path.join("mapping", "mediapipe_paths.json"), "r") as f:
-        # mediapipe_paths = json.load(f)
-        with open(
-            os.path.join(os.path.dirname(__file__), "mapping", "mediapipe_paths.pkl"),
-            "rb",
-        ) as f:
-            mediapipe_paths = pickle.load(f)
-
-        self.data_paths = mediapipe_paths
-        self.humanoid_name = humanoid_name
-        self.mediapipe_dir = mediapipe_dir
-        self.animation_dir = animation_dir
-
-        # display how much memory is used by self.data_paths
-        # print(
-        #     f"Memory used by self.data_paths: {self.data_paths.__sizeof__() / 1024} KB"
-        # )
-
-    def __len__(self):
-        return len(self.data_paths)
-
-    def __getitem__(self, idx):
-        animation_name, elevation, azimuth, n_frame = self.data_paths[idx]
-
-        landmark_file = os.path.join(
-            self.mediapipe_dir,
-            self.humanoid_name,
-            animation_name,
-            elevation,
-            azimuth,
-            n_frame,
-            "world_landmarks.json",
-        )
-
-        with open(landmark_file, "r") as f:
-            landmarks = json.load(f)
-
-        landmarks1d = []
-        # flattten landmarks
-        for l in landmarks:
-            landmarks1d.append(l["x"])
-            landmarks1d.append(l["y"])
-            landmarks1d.append(l["z"])
-
-        # convert landmarks to tensor
-        landmarks1d = torch.tensor(landmarks1d, dtype=torch.float32)
-
-        with open(os.path.join(self.animation_dir, animation_name), "r") as f:
-            animation_data = json.load(f)
-
-        bone_rotations = []
-
-        # get data from n_frame
-        for bone_name in HUMANOID_BONES:
-
-            try:
-                rotation = animation_data[bone_name]["values"][int(n_frame)]
-            except IndexError as e:
-                # print(
-                #     f"IndexError: {animation_name} {bone_name} {n_frame}, real length {len(animation_data[bone_name]['values'])}"
-                # )
-                # raise e
-                rotation = animation_data[bone_name]["values"][
-                    len(animation_data[bone_name]["values"]) - 1
-                ]
-
-            bone_rotations.append(rotation[0])
-            bone_rotations.append(rotation[1])
-            bone_rotations.append(rotation[2])
-
-        # convert bone_rotations to tensor
-        bone_rotations = torch.tensor(bone_rotations, dtype=torch.float32)
-
-        return landmarks1d, bone_rotations
-
-        # animation_file = os.path.join(animation_dir, f"{animation_name}.json")
-
-        # with open(landmark_file, "r") as f:
-        #     landmarks = json.load(f)
-
-        # with open(animation_file, "r") as f:
-        #     animation = json.load(f)
-
-        # return {
-        #     "landmarks": landmarks,
-        #     "animation": animation,
-        # }
 
 
 if __name__ == "__main__":
