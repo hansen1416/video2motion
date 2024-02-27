@@ -214,6 +214,8 @@ if __name__ == "__main__":
 
     # upload_mediapipe()
 
-    upload_anim_data("anim-json")
-    upload_anim_data("anim-json-mixamo")
-    upload_anim_data("anim-json-euler")
+    # upload_anim_data("anim-json")
+    # upload_anim_data("anim-json-mixamo")
+    # upload_anim_data("anim-json-euler")
+
+    pass

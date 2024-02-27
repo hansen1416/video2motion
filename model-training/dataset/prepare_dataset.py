@@ -3,13 +3,18 @@ import json
 import pickle
 from dotenv import load_dotenv
 from itertools import islice
+import time
 
+from tqdm import tqdm
 import numpy as np
 import torch
 from torch.utils.data import Dataset
 import oss2
 from oss2.credentials import EnvironmentVariableCredentialsProvider
+from dotenv import load_dotenv
 
+# Load the environment variables from the .env file
+load_dotenv()
 
 """
 Memory-Mapped Files:
@@ -219,117 +224,127 @@ def generate_meidiapipe_paths(humanoid_name, mediapipe_dir, animation_names):
     # return filename
 
 
-def build_dataset():
+def get_landmarks1d(landmarks):
+    """
+    Convert landmarks to 1d tensor, drop visibility and presence
 
-    anim_euler_dir = os.path.join(
-        os.path.dirname(__file__),
-        "..",
-        "..",
-        "anim-player",
-        "public",
-        "anim-json-euler",
-    )
+    Args:
+        landmarks: list of dict
+    Returns:
+        landmarks1d: torch.tensor
+    """
+    landmarks1d = []
+    # flattten landmarks
+    for l in landmarks:
+        landmarks1d.append(l["x"])
+        landmarks1d.append(l["y"])
+        landmarks1d.append(l["z"])
 
-    mediapipe_dir = os.path.join(
-        os.path.dirname(__file__),
-        "..",
-        "mediapipe",
-        "results",
-    )
+    # convert landmarks to tensor
+    landmarks1d = torch.tensor(landmarks1d, dtype=torch.float32)
 
-    animation_names = [filename for filename in os.listdir(anim_euler_dir)]
+    return landmarks1d
+
+
+def extract_anim_euler_frames(anim_euler_data, n_frame):
+    """
+    Read the bone rotation animation data at the n_frame
+
+    Args:
+        anim_euler_data: dict
+        n_frame: int
+    Returns:
+        bone_rotations: torch.tensor
+    """
+    bone_rotations = []
+
+    # get data from n_frame
+    for bone_name in HUMANOID_BONES:
+
+        try:
+            rotation = anim_euler_data[bone_name]["values"][int(n_frame)]
+        except IndexError as e:
+            # print(
+            #     f"IndexError: {animation_name} {bone_name} {n_frame}, real length {len(animation_data[bone_name]['values'])}"
+            # )
+            # raise e
+            rotation = anim_euler_data[bone_name]["values"][
+                len(anim_euler_data[bone_name]["values"]) - 1
+            ]
+
+        bone_rotations.append(rotation[0])
+        bone_rotations.append(rotation[1])
+        bone_rotations.append(rotation[2])
+
+    # convert bone_rotations to tensor
+    bone_rotations = torch.tensor(bone_rotations, dtype=torch.float32)
+
+    return bone_rotations
+
+
+def build_dataset(bucket):
 
     humanoid_name = "dors.glb"
 
-    # seperate the animation names into 6 trunks
-    trunks = np.array_split(animation_names, 6)
+    queue_dir = os.path.join(
+        os.path.dirname(__file__), "..", "..", "video-recorder", "queue", humanoid_name
+    )
 
-    for i in range(len(trunks)):
-        trunks[i] = trunks[i].tolist()
+    data_dir = os.path.join(os.path.dirname(__file__), "data")
 
-    # save trunks to json file
-    with open(os.path.join(os.path.dirname(__file__), "data", "trunks.json"), "w") as f:
-        json.dump(trunks, f)
+    mediapipe_path = f"mediapipe/{humanoid_name}/"
+    anim_euler_path = f"anim-json-euler/"
 
-    for i in range(len(trunks)):
-        data_paths = generate_meidiapipe_paths("dors.glb", mediapipe_dir, trunks[i])
+    for fname in os.listdir(queue_dir):
+        with open(os.path.join(queue_dir, fname), "r") as f:
+            data = json.load(f)
+
+        # for testing, only get 100
+        data = data[:1000]
 
         features = []
-
         targets = []
 
-        for animation_name, elevation, azimuth, n_frame in data_paths:
+        for animation_name, elevation, azimuth, n_frame in tqdm(data):
 
-            landmark_file = os.path.join(
-                mediapipe_dir,
-                humanoid_name,
-                animation_name,
-                elevation,
-                azimuth,
-                n_frame,
-                "world_landmarks.json",
+            landmarks_obj = bucket.get_object(
+                f"{mediapipe_path}{animation_name}/{elevation}/{azimuth}/{n_frame}/world_landmarks.json"
             )
 
-            with open(landmark_file, "r") as f:
-                landmarks = json.load(f)
+            world_landmarks = json.loads(landmarks_obj.read())
 
-            landmarks1d = []
-            # flattten landmarks
-            for l in landmarks:
-                landmarks1d.append(l["x"])
-                landmarks1d.append(l["y"])
-                landmarks1d.append(l["z"])
-
-            # convert landmarks to tensor
-            landmarks1d = torch.tensor(landmarks1d, dtype=torch.float32)
+            landmarks1d = get_landmarks1d(world_landmarks)
 
             features.append(landmarks1d)
 
             # print(landmarks1d)
 
-            with open(os.path.join(anim_euler_dir, animation_name), "r") as f:
-                animation_data = json.load(f)
+            anim_euler_obj = bucket.get_object(f"{anim_euler_path}{animation_name}")
 
-            bone_rotations = []
+            anim_euler = json.loads(anim_euler_obj.read())
 
-            # get data from n_frame
-            for bone_name in HUMANOID_BONES:
-
-                try:
-                    rotation = animation_data[bone_name]["values"][int(n_frame)]
-                except IndexError as e:
-                    # print(
-                    #     f"IndexError: {animation_name} {bone_name} {n_frame}, real length {len(animation_data[bone_name]['values'])}"
-                    # )
-                    # raise e
-                    rotation = animation_data[bone_name]["values"][
-                        len(animation_data[bone_name]["values"]) - 1
-                    ]
-
-                bone_rotations.append(rotation[0])
-                bone_rotations.append(rotation[1])
-                bone_rotations.append(rotation[2])
-
-            # convert bone_rotations to tensor
-            bone_rotations = torch.tensor(bone_rotations, dtype=torch.float32)
+            bone_rotations = extract_anim_euler_frames(anim_euler, n_frame)
 
             targets.append(bone_rotations)
+
+            # print(bone_rotations)
+
+            # break
 
         features = np.array(features)
         targets = np.array(targets)
 
-        print(features.shape, targets.shape)
-
-        # save features and targets to file
+        # save features and targets to npy file
         np.save(
-            os.path.join(os.path.dirname(__file__), "data", f"features_{i}.npy"),
+            os.path.join(data_dir, f"inputs_{fname.replace('.json', '')}.npy"),
             features,
         )
+
         np.save(
-            os.path.join(os.path.dirname(__file__), "data", f"targets_{i}.npy"), targets
+            os.path.join(data_dir, f"outputs_{fname.replace('.json', '')}.npy"), targets
         )
 
-    # print(len(animation_names))
+        break
 
 
 class MediapipeDataset(Dataset):
@@ -437,35 +452,12 @@ class MediapipeDataset(Dataset):
 
 if __name__ == "__main__":
 
-    # mediapipe_dir = os.path.join(
-    #     os.path.dirname(__file__),
-    #     "..",
-    #     "mediapipe",
-    #     "results",
-    # )
+    auth = oss2.ProviderAuth(EnvironmentVariableCredentialsProvider())
 
-    # animation_dir = os.path.join(
-    #     os.path.dirname(__file__),
-    #     "..",
-    #     "..",
-    #     "anim-player",
-    #     "public",
-    #     "anim-json-euler",
-    # )
+    endpoint = "oss-ap-southeast-1.aliyuncs.com"
 
-    # # print(mediapipe_paths)
+    # oss bucket, timeout 30s
+    bucket = oss2.Bucket(auth, endpoint, "pose-daten", connect_timeout=30)
 
-    # m_dataset = MediapipeDataset("dors.glb", mediapipe_dir, animation_dir)
-
-    # for i in range(len(m_dataset)):
-    #     # print(i)
-    #     landmarks, rotations = m_dataset[i]
-    #     # print(landmarks.shape, rotations.shape)
-
-    # # get the first item from the dataset
-    # # landmarks, rotations = m_dataset[0]
-
-    # # print(landmarks.shape, rotations.shape)
-
-    build_dataset()
+    build_dataset(bucket)
     pass
