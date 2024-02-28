@@ -2,21 +2,27 @@ import os
 
 import numpy as np
 import torch
+from torch import Tensor
 from torch.nn import Linear
 from torch.utils.data import DataLoader
 
 from dataset import DATA_DIR, MediapipeDataset
-from lib3d.lib import vector_apply_euler_arr
+from lib3d.lib import vector_apply_euler_tensor
 
 
-def output_vectors_distance(v1, v2):
-    v1 = v1.reshape(-1, 3)
-    v2 = v2.reshape(-1, 3)
+def euler2vector(t: Tensor):
+    # v1.view(-1, 3)
+    # v2 = v2.reshape(-1, 3)
 
-    # apply vector_apply_euler_arr along axis 2
-    v1 = torch.Tensor.apply_along_dim(vector_apply_euler_arr, 2, v1)
+    # # apply vector_apply_euler_arr along axis 2
+    # v1 = torch.Tensor.apply_along_dim(vector_apply_euler_tensor, 2, v1)
 
-    print(v1)
+    print(t)
+
+    for i in range(t.shape[0]):
+        for j in range(t.shape[1]):
+            tmp = t.view(-1, 22, 3)[i, j]
+            print(tmp)
 
 
 if __name__ == "__main__":
@@ -62,15 +68,11 @@ if __name__ == "__main__":
             # Forward pass
             outputs = model(features)
 
-            print(targets)
-            print(targets.shape)
+            # # reshape the outputs from (bacth_size, 66) to (batch_size, 22, 3)
+            # outputs = outputs.reshape(-1, 22, 3)
+            # targets = targets.reshape(-1, 22, 3)
 
-            # reshape the outputs from (bacth_size, 66) to (batch_size, 22, 3)
-            outputs = outputs.reshape(-1, 22, 3)
-            targets = targets.reshape(-1, 22, 3)
-
-            print(targets)
-            print(targets.shape)
+            euler2vector(outputs)
 
             # Calculate loss
             loss = loss_fn(
