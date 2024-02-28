@@ -274,7 +274,7 @@ def extract_anim_euler_frames(anim_euler_data, n_frame):
     # convert bone_rotations to tensor
     bone_rotations = np.array(bone_rotations, dtype=np.float32)
 
-    return bone_rotations
+    return bone_rotations.reshape(-1, 3)
 
 
 def build_dataset(bucket):
@@ -298,7 +298,7 @@ def build_dataset(bucket):
             data = json.load(f)
 
         # for testing, only get 100
-        data = data[:1000]
+        data = data[:10000]
 
         features = []
         targets = []

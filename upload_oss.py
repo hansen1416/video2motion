@@ -210,7 +210,7 @@ def upload_anim_data(sub_folder_name):
 
 if __name__ == "__main__":
 
-    # upload_screen_shot()
+    upload_screen_shot()
 
     # upload_mediapipe()
 
