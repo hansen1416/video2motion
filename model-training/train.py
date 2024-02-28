@@ -4,8 +4,16 @@ import torch
 from torch.nn import Linear
 from torch.utils.data import DataLoader
 
-
 from dataset import DATA_DIR, MediapipeDataset
+from lib3d.lib import vector_apply_euler
+
+
+def output_vectors_distance(v1, v2):
+    v1 = v1.reshape(-1, 3)
+    v2 = v2.reshape(-1, 3)
+
+    # first convert v1[:,:, 3] to Vector3
+
 
 if __name__ == "__main__":
 
@@ -17,7 +25,7 @@ if __name__ == "__main__":
     # get the first item from the dataset
     landmarks, rotations = train_dataset[0]
 
-    print(landmarks.shape, rotations.shape)
+    # print(landmarks.shape, rotations.shape)
 
     # Assuming you have your CustomDataset class defined
 
@@ -39,7 +47,7 @@ if __name__ == "__main__":
     # Create data loaders (replace with your actual data paths)
     train_loader = DataLoader(train_dataset, batch_size=4, shuffle=True)
 
-    print(train_loader)
+    # print(train_loader)
 
     # val_dataset = CustomDataset("path/to/val/data")
     # val_loader = DataLoader(val_dataset, batch_size=32, shuffle=False)
@@ -49,6 +57,16 @@ if __name__ == "__main__":
         for features, targets in train_loader:  # Ignore labels for now
             # Forward pass
             outputs = model(features)
+
+            print(targets)
+            print(targets.shape)
+
+            # reshape the outputs from (bacth_size, 66) to (batch_size, 22, 3)
+            outputs = outputs.reshape(-1, 22, 3)
+            targets = targets.reshape(-1, 22, 3)
+
+            print(targets)
+            print(targets.shape)
 
             # Calculate loss
             loss = loss_fn(
@@ -62,6 +80,9 @@ if __name__ == "__main__":
 
             # Print training progress (optional)
             print(f"Epoch {epoch+1}/{epochs}, Loss: {loss.item():.4f}")
+
+            break
+        break
 
 # # Evaluate the model (assuming you have validation data)
 # with torch.no_grad():
