@@ -12,12 +12,18 @@ class Euler:
     def to_array(self):
         return [self.x, self.y, self.z]
 
+    def __str__(self) -> str:
+        return str([self.x, self.y, self.z])
+
 
 class Vector3:
     def __init__(self, x=0, y=0, z=0):
         self.x = x
         self.y = y
         self.z = z
+
+    def __str__(self) -> str:
+        return str([self.x, self.y, self.z])
 
 
 class Quaternion:
@@ -26,6 +32,9 @@ class Quaternion:
         self.y = y
         self.z = z
         self.w = w
+
+    def __str__(self) -> str:
+        return str([self.x, self.y, self.z, self.w])
 
     def length(self):
         return math.sqrt(self.x**2 + self.y**2 + self.z**2 + self.w**2)
@@ -252,6 +261,8 @@ def quaternion_from_euler(euler: Euler, order: str = "XYZ") -> Quaternion:
     else:
         raise ValueError(f"Unknown order: {order}")
 
+    quaternion.normalize()
+
     return quaternion
 
 
@@ -275,12 +286,27 @@ def vector_apply_quaternion(v: Vector3, q: Quaternion) -> Vector3:
     return v
 
 
+def vectors_distance(v1: Vector3, v2: Vector3) -> float:
+    dx = v1.x - v2.x
+    dy = v1.y - v2.y
+    dz = v1.z - v2.z
+
+    return math.sqrt(dx * dx + dy * dy + dz * dz)
+
+
+def vector_apply_euler(v: Vector3, euler: Euler) -> Vector3:
+    quaternion = quaternion_from_euler(euler)
+    return vector_apply_quaternion(v, quaternion)
+
+
 if __name__ == "__main__":
 
-    quaternion = quaternion_from_euler(Euler(0, math.pi, 0), "XYZ")
+    v1 = vector_apply_euler(Vector3(-1, 0, 0), Euler(0, 0, 0))
+    v2 = vector_apply_euler(Vector3(1, 0, 0), Euler(0, 0, 0))
 
-    print(quaternion.x, quaternion.y, quaternion.z, quaternion.w)
+    print(v1)
+    print(v2)
 
-    vector = vector_apply_quaternion(Vector3(1, 0, 0), quaternion)
+    distance = vectors_distance(v1, v2)
 
-    print(vector.x, vector.y, vector.z)
+    print(distance)
