@@ -1,18 +1,22 @@
 import os
 
+import numpy as np
 import torch
 from torch.nn import Linear
 from torch.utils.data import DataLoader
 
 from dataset import DATA_DIR, MediapipeDataset
-from lib3d.lib import vector_apply_euler
+from lib3d.lib import vector_apply_euler_arr
 
 
 def output_vectors_distance(v1, v2):
     v1 = v1.reshape(-1, 3)
     v2 = v2.reshape(-1, 3)
 
-    # first convert v1[:,:, 3] to Vector3
+    # apply vector_apply_euler_arr along axis 2
+    v1 = torch.Tensor.apply_along_dim(vector_apply_euler_arr, 2, v1)
+
+    print(v1)
 
 
 if __name__ == "__main__":
