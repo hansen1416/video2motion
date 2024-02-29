@@ -19,7 +19,7 @@ endpoint = "oss-ap-southeast-1.aliyuncs.com"
 # 填写Bucket名称，并设置连接超时时间为30秒。
 bucket = oss2.Bucket(auth, endpoint, "pose-daten", connect_timeout=30)
 
-print(bucket)
+# print(bucket)
 
 
 def upload_screen_shot():
@@ -27,49 +27,60 @@ def upload_screen_shot():
     data_dir = os.path.join(os.path.dirname(__file__), "video-recorder", "data")
     humanoid_name = "dors.glb"
 
-    humanoid_path = os.path.join(data_dir, humanoid_name)
+    queue_num = [4, 5, 6, 7]
 
-    for animation_name in os.listdir(humanoid_path):
+    # for q in os.listdir(
+    #     os.path.join(
+    #         os.path.dirname(__file__), "video-recorder", "queue", humanoid_name
+    #     )
+    # ):
+    for q in queue_num:
 
-        animation_name_path = os.path.join(humanoid_path, animation_name)
+        with open(
+            os.path.join(
+                os.path.dirname(__file__),
+                "queues",
+                f"queue{q}.json",
+            )
+        ) as f:
+            queue_data = json.load(f)
 
-        for elevation in os.listdir(animation_name_path):
+        for animation_name, elevation, azimuth, n_frame in queue_data:
 
-            elevation_path = os.path.join(animation_name_path, elevation)
+            object_name = f"screenshot/{humanoid_name}/{animation_name}/{elevation}/{azimuth}/{n_frame}.jpg"
 
-            for azimuth in os.listdir(elevation_path):
+            local_file = os.path.join(
+                data_dir,
+                humanoid_name,
+                animation_name,
+                str(elevation),
+                str(azimuth),
+                str(n_frame) + ".jpg",
+            )
 
-                azimuth_path = os.path.join(elevation_path, azimuth)
+            # check if `object_name` already exists in the bucket
+            if bucket.object_exists(object_name):
+                print(f"{object_name} already exists in the bucket")
+                continue
 
-                for file in os.listdir(azimuth_path):
+            # print(object_name, local_file)
 
-                    object_name = f"screenshot/{humanoid_name}/{animation_name}/{elevation}/{azimuth}/{file}"
+            # 上传文件到OSS。
+            # yourObjectName由包含文件后缀，不包含Bucket名称组成的Object完整路径，例如abc/efg/123.jpg。
+            # yourLocalFile由本地文件路径加文件名包括后缀组成，例如/users/local/myfile.txt。
+            result = bucket.put_object_from_file(object_name, local_file)
 
-                    local_file = os.path.join(azimuth_path, file)
+            # HTTP返回码。
+            print(
+                "{} => {} http status: {}".format(
+                    local_file, object_name, result.status
+                )
+            )
 
-                    # check if `object_name` already exists in the bucket
-                    if bucket.object_exists(object_name):
-                        print(f"{object_name} already exists in the bucket")
-                        continue
-
-                    # print(object_name, local_file)
-
-                    # 上传文件到OSS。
-                    # yourObjectName由包含文件后缀，不包含Bucket名称组成的Object完整路径，例如abc/efg/123.jpg。
-                    # yourLocalFile由本地文件路径加文件名包括后缀组成，例如/users/local/myfile.txt。
-                    result = bucket.put_object_from_file(object_name, local_file)
-
-                    # HTTP返回码。
-                    print(
-                        "{} => {} http status: {}".format(
-                            local_file, object_name, result.status
-                        )
-                    )
-
-                    if int(result.status) != 200:
-                        # output the local file path to local log
-                        with open("upload-error.log", "a") as f:
-                            f.write(f"{local_file}\n")
+            if int(result.status) != 200:
+                # output the local file path to local log
+                with open("upload-screenshot-error.log", "a") as f:
+                    f.write(f"{local_file}\n")
 
 
 def upload_mediapipe():
@@ -84,7 +95,7 @@ def upload_mediapipe():
         humanoid_name,
     )
 
-    queue_num = [0, 1, 2, 3, 4, 5, 6]
+    queue_num = [5, 6, 7]
 
     # for q in os.listdir(
     #     os.path.join(
@@ -96,9 +107,7 @@ def upload_mediapipe():
         with open(
             os.path.join(
                 os.path.dirname(__file__),
-                "video-recorder",
-                "queue",
-                humanoid_name,
+                "queues",
                 f"queue{q}.json",
             )
         ) as f:

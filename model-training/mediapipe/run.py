@@ -160,9 +160,7 @@ source_image_dir = os.path.join(
     os.path.dirname(__file__), "..", "..", "video-recorder", "data"
 )
 
-queue_dir = os.path.join(
-    os.path.dirname(__file__), "..", "..", "video-recorder", "queue"
-)
+queue_dir = os.path.join(os.path.dirname(__file__), "..", "..", "queues")
 
 charater_names = ["dors.glb"]
 
@@ -186,9 +184,9 @@ with PoseLandmarker.create_from_options(options) as landmarker:
 
     for char in charater_names:
 
-        for queue_num in [0, 1, 2, 3, 4, 5, 6]:
+        for queue_num in [5, 6, 7]:
 
-            queue_file = os.path.join(queue_dir, char, f"queue{queue_num}.json")
+            queue_file = os.path.join(queue_dir, f"queue{queue_num}.json")
 
             with open(queue_file) as f:
                 queue_data = json.load(f)
