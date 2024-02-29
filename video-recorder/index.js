@@ -24,9 +24,9 @@ let counter = 0;
 
     for (const char of character_names) {
 
-        for (const queue_num of [0, 1, 2, 3, 4, 5, 6]) {
+        for (const queue_num of [7]) {
 
-            const queue_data = JSON.parse(fs.readFileSync(path.join('queue', char, `queue${queue_num}.json`), 'utf8'));
+            const queue_data = JSON.parse(fs.readFileSync(path.join('..', 'queues', `queue${queue_num}.json`), 'utf8'));
 
             for (const task of queue_data) {
                 // console.log(task)
