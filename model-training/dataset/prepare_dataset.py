@@ -298,16 +298,22 @@ def build_dataset(bucket):
             data = json.load(f)
 
         # for testing, only get 100
-        data = data[:10000]
+        data = data[:500]
 
         features = []
         targets = []
 
         for animation_name, elevation, azimuth, n_frame in tqdm(data):
 
-            landmarks_obj = bucket.get_object(
-                f"{mediapipe_path}{animation_name}/{elevation}/{azimuth}/{n_frame}/world_landmarks.json"
-            )
+            try:
+                landmarks_obj = bucket.get_object(
+                    f"{mediapipe_path}{animation_name}/{elevation}/{azimuth}/{n_frame}/world_landmarks.json"
+                )
+            except oss2.exceptions.NoSuchKey as e:
+                print(
+                    f"oss2.exceptions.NoSuchKey: {mediapipe_path}{animation_name}/{elevation}/{azimuth}/{n_frame}/world_landmarks.json"
+                )
+                continue
 
             world_landmarks = json.loads(landmarks_obj.read())
 
