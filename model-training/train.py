@@ -7,7 +7,7 @@ from torch import nn
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 
-from Model import MyModel
+from MediapipeTransferLinear import MediapipeTransferLinear
 from dataset import DATA_DIR, MediapipeDataset
 
 
@@ -36,19 +36,21 @@ if __name__ == "__main__":
     # Assuming you have your CustomDataset class defined
 
     # Hyperparameters (adjust based on your needs)
-    learning_rate = 0.01
-    epochs = 200
+    learning_rate = 0.001
+    epochs = 500
 
-    model = MyModel()
+    model = MediapipeTransferLinear()
 
     # Define loss function and optimizer
     loss_fn = torch.nn.MSELoss(reduction="none")  # Mean squared error for regression
     loss_fn2 = torch.nn.MSELoss(reduction="mean")  # Mean squared error for regression
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
+    BTACH_SIZE = 8
+
     # Create data loaders (replace with your actual data paths)
-    train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)
-    test_loader = DataLoader(test_dataset, batch_size=32, shuffle=False)
+    train_loader = DataLoader(train_dataset, batch_size=BTACH_SIZE, shuffle=True)
+    test_loader = DataLoader(test_dataset, batch_size=BTACH_SIZE, shuffle=False)
 
     # print(train_loader)
 

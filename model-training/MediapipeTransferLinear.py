@@ -3,9 +3,9 @@ from torch import Tensor
 from torch import nn
 
 
-class MyModel(nn.Module):
+class MediapipeTransferLinear(nn.Module):
     def __init__(self):
-        super(MyModel, self).__init__()
+        super(MediapipeTransferLinear, self).__init__()
         self.linear1 = nn.Linear(99, 128)
         self.linear2 = nn.Linear(128, 256)
         self.linear3 = nn.Linear(256, 128)
