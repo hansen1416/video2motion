@@ -101,7 +101,7 @@ function get_longest_track (tracks) {
 
             counter += 1;
 
-            if (counter >= 300) {
+            if (counter >= 300 || anim_name === animatiom_names[animatiom_names.length - 1]) {
                 // every 300 tasks, save the data to a local file
 
                 // save data to a local file named queue0.json
