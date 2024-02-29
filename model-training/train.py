@@ -124,7 +124,7 @@ if __name__ == "__main__":
     writer.close()
 
     # save the model to local file
-    torch.save(model.state_dict(), "model.pth")
+    torch.save(model.state_dict(), os.path.join("models", "model.pth"))
 
 # # Evaluate the model (assuming you have validation data)
 # with torch.no_grad():

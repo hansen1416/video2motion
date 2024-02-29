@@ -1,45 +1,70 @@
 import os
+import json
 
+import oss2
 import numpy as np
 import torch
 from torch import Tensor
 from torch import nn
 from torch.utils.data import DataLoader
 
-from Model import MyModel
-from dataset import DATA_DIR, MediapipeDataset
+from MediapipeTransferLinear import MediapipeTransferLinear
+from oss2_utils import get_bucket
 
-# load model saved by `torch.save(model.state_dict(), "model.pth")`
-model = MyModel()
+if __name__ == "__main__":
 
-model.load_state_dict(torch.load("model.pth"))
+    saved_model_path = os.path.join("models", "model.pth")
 
-model.eval()  # set the model to evaluation mode
+    # load model saved by `torch.save(model.state_dict(), "model.pth")`
+    model = MediapipeTransferLinear()
 
-print(model)
+    model.load_state_dict(torch.load(saved_model_path))
 
-train_dataset = MediapipeDataset(
-    os.path.join(DATA_DIR, "inputs_queue0.npy"),
-    os.path.join(DATA_DIR, "outputs_queue0.npy"),
-)
+    model.eval()  # set the model to evaluation mode
 
-inputs, outputs = train_dataset[0]
+    humanoid_name = "dors.glb"
+    animation_name = "Action Idle To Standing Idle.json"
 
-# add one more dimension to inputs and outputs
-inputs = inputs.unsqueeze(0)
-outputs = outputs.unsqueeze(0)
+    elevation = 30
+    azimuth = 0
 
-print(inputs.shape)
+    mediapipe_path = (
+        f"mediapipe/{humanoid_name}/{animation_name}/{elevation}/{azimuth}/"
+    )
 
-# predict inputs[0] using the model
-with torch.no_grad():  # no need to track the gradients
-    prediction = model(inputs)
+    # ger all mediapipe prediected result from oss for a given animation
+    bucket = get_bucket()
 
-# calculate mse between prediction and outputs
+    world_landmarks_json = {}
 
-loss_fn = torch.nn.MSELoss(reduction="mean")  # Mean squared error for regression
-loss = loss_fn(prediction, outputs)
+    # list all files in the oss folder
+    for obj in oss2.ObjectIterator(bucket, prefix=mediapipe_path):
+        # if obj.key.endswith("world_landmarks.json"):
+        if obj.key.endswith("world_landmarks.json"):
 
-# print(prediction)
-# print(outputs)
-print(loss.item())
+            # use regexp to get the n_frame
+            n_frame = int(obj.key.split("/")[-2])
+
+            world_landmarks_json[n_frame] = obj.key
+            # world_landmarks = json.loads(obj.read())
+            # landmarks1d = get_landmarks1d(world_landmarks)
+
+            # # predict inputs[0] using the model
+            # with torch.no_grad():  # no need to track the gradients
+            #     prediction = model(landmarks1d)
+
+        # print(obj.key)
+
+    features = []
+
+    # sort world_landmarks_json
+    for _, v in sorted(world_landmarks_json.items()):
+
+        # todo load the world_landmarks_json from oss
+        landmarks_obj = bucket.get_object(v)
+
+        world_landmarks = json.loads(landmarks_obj.read())
+
+    # # predict inputs[0] using the model
+    # with torch.no_grad():  # no need to track the gradients
+    #     prediction = model(inputs)
