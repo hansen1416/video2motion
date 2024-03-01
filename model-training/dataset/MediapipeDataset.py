@@ -65,7 +65,7 @@ class MediapipeDataset(Dataset):
             self.current_outputs, dtype=torch.float32
         ).to(self.device)
 
-        # print(f"loaded file {file_idx}")
+        print(f"loaded file {file_idx}")
 
     def __getitem__(self, idx) -> Tuple[torch.Tensor, torch.Tensor]:
         """
@@ -85,6 +85,10 @@ class MediapipeDataset(Dataset):
 
 if __name__ == "__main__":
 
+    from torch.utils.data import DataLoader
+
+    from FilewiseShuffleSampler import FilewiseShuffleSampler
+
     inputs_dir = os.path.join(os.path.dirname(__file__), "data", "inputs")
     outputs_dir = os.path.join(os.path.dirname(__file__), "data", "outputs")
 
@@ -103,15 +107,22 @@ if __name__ == "__main__":
 
     file_idx = 0
     indices_file_map = {}
+    accumulated_count = 0
+    smapler_data_sizes = []
 
     for f in os.listdir(inputs_dir):
         data = np.load(os.path.join(inputs_dir, f))
 
         indices_file_map.update(
-            {i + file_idx * max_file_size: file_idx for i in range(data.shape[0])}
+            {i + accumulated_count: file_idx for i in range(data.shape[0])}
+        )
+
+        smapler_data_sizes.append(
+            list(range(accumulated_count, accumulated_count + data.shape[0]))
         )
 
         file_idx += 1
+        accumulated_count += data.shape[0]
 
     print(f"max_file_size: {max_file_size}")
     print(f"total_size: {total_size}")
@@ -129,3 +140,13 @@ if __name__ == "__main__":
     for i in range(len(dataset)):
         inputs, outputs = dataset[i]
         print(inputs.shape, outputs.shape)
+
+    dataloader = DataLoader(
+        dataset,
+        batch_size=16,
+        sampler=FilewiseShuffleSampler(data_sizes=smapler_data_sizes),
+    )
+
+    for inputs, outputs in dataloader:
+        print(inputs.shape, outputs.shape)
+        # break
