@@ -1,5 +1,5 @@
 import os
-from typing import Tuple
+from typing import Tuple, Dict, List
 
 import numpy as np
 import torch
@@ -12,9 +12,8 @@ class MediapipeDataset(Dataset):
         self,
         inputs_dir: str,
         outputs_dir: str,
-        total_size: int,
-        max_file_size: int,
-        indices_file_map: dict,
+        indices_file_map: Dict,
+        files_data_sizes: List[List[int]],
         device="cpu",
     ) -> None:
         """
@@ -31,9 +30,8 @@ class MediapipeDataset(Dataset):
 
         self.inputs_dir = inputs_dir
         self.outputs_dir = outputs_dir
-        self.total_size = total_size
-        self.max_file_size = max_file_size
         self.indices_file_map = indices_file_map
+        self.files_data_sizes = files_data_sizes
         self.device = device
 
         # current file data
@@ -42,7 +40,7 @@ class MediapipeDataset(Dataset):
         self.current_outputs = None
 
     def __len__(self) -> int:
-        return self.total_size
+        return len(self.indices_file_map)
 
     def load_file(self, file_idx) -> None:
         """
@@ -78,7 +76,14 @@ class MediapipeDataset(Dataset):
         if self.current_file_idx != file_idx:
             self.load_file(file_idx)
 
-        idx -= file_idx * self.max_file_size
+        # get the index of the data in the current file, minus the sum of the sizes of the previous files
+        idx -= sum(
+            [
+                len(sizes)
+                for i, sizes in enumerate(self.files_data_sizes)
+                if i < file_idx
+            ]
+        )
 
         return self.current_inputs[idx], self.current_outputs[idx]
 
@@ -86,24 +91,10 @@ class MediapipeDataset(Dataset):
 if __name__ == "__main__":
 
     from torch.utils.data import DataLoader
-
     from FilewiseShuffleSampler import FilewiseShuffleSampler
 
     inputs_dir = os.path.join(os.path.dirname(__file__), "data", "inputs")
     outputs_dir = os.path.join(os.path.dirname(__file__), "data", "outputs")
-
-    max_file_size = 0
-    total_size = 0
-
-    for f in os.listdir(inputs_dir):
-        data = np.load(os.path.join(inputs_dir, f))
-
-        print(data.shape)
-
-        if data.shape[0] > max_file_size:
-            max_file_size = data.shape[0]
-
-        total_size += data.shape[0]
 
     file_idx = 0
     indices_file_map = {}
@@ -124,16 +115,14 @@ if __name__ == "__main__":
         file_idx += 1
         accumulated_count += data.shape[0]
 
-    print(f"max_file_size: {max_file_size}")
-    print(f"total_size: {total_size}")
-    print(f"indices_file_map: {indices_file_map}")
+    print(f"indices_file_map size: {len(indices_file_map)}")
+    print(f"smapler_data_sizes: {smapler_data_sizes}")
 
     dataset = MediapipeDataset(
         inputs_dir,
         outputs_dir,
-        total_size,
-        max_file_size,
         indices_file_map,
+        smapler_data_sizes,
         device="cpu",
     )
 
