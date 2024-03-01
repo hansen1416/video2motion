@@ -13,7 +13,8 @@ from dataset import DATA_DIR, MediapipeDataset
 
 if __name__ == "__main__":
 
-    writer = SummaryWriter()
+    inputs_dir = os.path.join(os.path.dirname(__file__), "data", "inputs")
+    outputs_dir = os.path.join(os.path.dirname(__file__), "data", "outputs")
 
     dataset = MediapipeDataset(
         os.path.join(DATA_DIR, "inputs_queue0.npy"),
@@ -54,8 +55,7 @@ if __name__ == "__main__":
 
     # print(train_loader)
 
-    # test_dataset = CustomDataset("path/to/val/data")
-    # test_loader = DataLoader(test_dataset, batch_size=32, shuffle=False)
+    writer = SummaryWriter()
 
     # Train the model
     for epoch in range(epochs):
