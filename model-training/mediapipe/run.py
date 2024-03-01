@@ -184,7 +184,7 @@ with PoseLandmarker.create_from_options(options) as landmarker:
 
     for char in charater_names:
 
-        for queue_num in [5, 6, 7]:
+        for queue_num in [6, 7]:
 
             queue_file = os.path.join(queue_dir, f"queue{queue_num}.json")
 

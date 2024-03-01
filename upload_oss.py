@@ -95,7 +95,7 @@ def upload_mediapipe():
         humanoid_name,
     )
 
-    queue_num = [5, 6, 7]
+    queue_num = [6, 7]
 
     # for q in os.listdir(
     #     os.path.join(
@@ -219,9 +219,9 @@ def upload_anim_data(sub_folder_name):
 
 if __name__ == "__main__":
 
-    upload_screen_shot()
+    # upload_screen_shot()
 
-    # upload_mediapipe()
+    upload_mediapipe()
 
     # upload_anim_data("anim-json")
     # upload_anim_data("anim-json-mixamo")
