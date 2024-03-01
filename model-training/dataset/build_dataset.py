@@ -128,10 +128,14 @@ class CustomProcess(Process):
         with open(self.queue_file_path, "r") as f:
             queue_data = json.load(f)
 
-        queue_filename = os.path.basename(self.queue_file_path).replace(".json", "")
+        queue_num = int(
+            os.path.basename(self.queue_file_path)
+            .replace(".json", "")
+            .replace("queue", "")
+        )
 
         # for testing, only get 100
-        queue_data = queue_data[:100]
+        queue_data = queue_data[:1000]
 
         features = []
         targets = []
@@ -175,21 +179,39 @@ class CustomProcess(Process):
             # print(bone_rotations)
 
             if i % 100 == 0:
-                print(f"{queue_filename} progress {i}/{len(queue_data)}")
+                print(f"queue {queue_num} progress {i}/{len(queue_data)}")
 
         features = np.array(features)
         targets = np.array(targets)
 
-        data_dir = os.path.join(os.path.dirname(__file__), "data")
+        if not os.path.exists(
+            os.path.join(os.path.dirname(__file__), "data", "inputs")
+        ):
+            os.makedirs(os.path.join(os.path.dirname(__file__), "data", "inputs"))
+
+        if not os.path.exists(
+            os.path.join(os.path.dirname(__file__), "data", "outputs")
+        ):
+            os.makedirs(os.path.join(os.path.dirname(__file__), "data", "outputs"))
 
         # save features and targets to npy file
         np.save(
-            os.path.join(data_dir, f"inputs_{queue_filename}.npy"),
+            os.path.join(
+                os.path.dirname(__file__),
+                "data",
+                "inputs",
+                f"inputs_{queue_num}.npy",
+            ),
             features,
         )
 
         np.save(
-            os.path.join(data_dir, f"outputs_{queue_filename}.npy"),
+            os.path.join(
+                os.path.dirname(__file__),
+                "data",
+                "outputs",
+                f"outputs_{queue_num}.npy",
+            ),
             targets,
         )
 
