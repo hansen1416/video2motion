@@ -10,34 +10,34 @@ class FilewiseShuffleSampler(Sampler):
     """
 
     def __init__(
-        self, data_sizes: Sequence[Sequence[int]] = None, generator=None
+        self, data_indices_in_files: Sequence[Sequence[int]] = None, generator=None
     ) -> None:
         """
         Args:
-            data_sizes (list): A list of list of indeices for each file.
+            data_indices_in_files (list): A list of list of indeices for each file.
             generator (torch.Generator, optional): Generator used for shuffling. Default is None.
         """
-        self.data_sizes = data_sizes
+        self.data_indices_in_files = data_indices_in_files
         self.generator = generator
 
     def __iter__(self) -> Iterator[int]:
-        for data_indices in self.data_sizes:
+        for data_indices in self.data_indices_in_files:
             for i in torch.randperm(len(data_indices), generator=self.generator):
                 yield data_indices[i]
 
     def __len__(self) -> int:
-        return sum([len(sizes) for sizes in self.data_sizes])
+        return sum([len(sizes) for sizes in self.data_indices_in_files])
 
 
 if __name__ == "__main__":
 
-    data_sizes = [
+    data_indices_in_files = [
         list(range(10, 21)),
         list(range(30, 41)),
         list(range(51, 60)),
         list(range(70, 73)),
     ]
-    sampler = FilewiseShuffleSampler(data_sizes)
+    sampler = FilewiseShuffleSampler(data_indices_in_files)
 
     for i in sampler:
         # Your data loading logic using the index 'i'

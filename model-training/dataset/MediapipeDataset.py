@@ -12,35 +12,33 @@ class MediapipeDataset(Dataset):
         self,
         inputs_dir: str,
         outputs_dir: str,
-        indices_file_map: Dict,
-        files_data_sizes: List[List[int]],
+        indices_to_file_index: Dict,
+        data_indices_in_files: List[List[int]],
         device="cpu",
     ) -> None:
         """
         Args:
             inputs_dir (str): The directory containing the input data.
             outputs_dir (str): The directory containing the output data.
-            total_size (int): The total data size of the dataset.
-            max_file_size (int): The maximum data size of a file.
-            indices_file_map (dict): A dictionary mapping the indices to the file number.
-            device (str, optional): The device to use. Default is "cpu".
+            indices_to_file_index (dict): A dictionary mapping the indices of the data to the file indices.
+            data_indices_in_files (list): A list of lists containing the sizes of the data in each file.
         """
 
         super().__init__()
 
         self.inputs_dir = inputs_dir
         self.outputs_dir = outputs_dir
-        self.indices_file_map = indices_file_map
-        self.files_data_sizes = files_data_sizes
+        self.indices_to_file_index = indices_to_file_index
+        self.data_indices_in_files = data_indices_in_files
         self.device = device
 
         # current file data
-        self.current_file_idx = None
-        self.current_inputs = None
-        self.current_outputs = None
+        self.current_file_idx: int = None
+        self.current_inputs: torch.Tensor = None
+        self.current_outputs: torch.Tensor = None
 
     def __len__(self) -> int:
-        return len(self.indices_file_map)
+        return len(self.indices_to_file_index)
 
     def load_file(self, file_idx) -> None:
         """
@@ -71,7 +69,7 @@ class MediapipeDataset(Dataset):
         if the data is not in memory, load the file containing the data into memory.
         """
 
-        file_idx = self.indices_file_map[idx]
+        file_idx = self.indices_to_file_index[idx]
 
         if self.current_file_idx != file_idx:
             self.load_file(file_idx)
@@ -80,7 +78,7 @@ class MediapipeDataset(Dataset):
         idx -= sum(
             [
                 len(sizes)
-                for i, sizes in enumerate(self.files_data_sizes)
+                for i, sizes in enumerate(self.data_indices_in_files)
                 if i < file_idx
             ]
         )
@@ -97,32 +95,32 @@ if __name__ == "__main__":
     outputs_dir = os.path.join(os.path.dirname(__file__), "data", "outputs")
 
     file_idx = 0
-    indices_file_map = {}
+    indices_to_file_index = {}
     accumulated_count = 0
-    smapler_data_sizes = []
+    data_indices_in_files = []
 
     for f in os.listdir(inputs_dir):
         data = np.load(os.path.join(inputs_dir, f))
 
-        indices_file_map.update(
+        indices_to_file_index.update(
             {i + accumulated_count: file_idx for i in range(data.shape[0])}
         )
 
-        smapler_data_sizes.append(
+        data_indices_in_files.append(
             list(range(accumulated_count, accumulated_count + data.shape[0]))
         )
 
         file_idx += 1
         accumulated_count += data.shape[0]
 
-    print(f"indices_file_map size: {len(indices_file_map)}")
-    print(f"smapler_data_sizes: {smapler_data_sizes}")
+    print(f"indices_to_file_index size: {len(indices_to_file_index)}")
+    print(f"data_indices_in_files: {data_indices_in_files}")
 
     dataset = MediapipeDataset(
         inputs_dir,
         outputs_dir,
-        indices_file_map,
-        smapler_data_sizes,
+        indices_to_file_index,
+        data_indices_in_files,
         device="cpu",
     )
 
@@ -133,7 +131,7 @@ if __name__ == "__main__":
     dataloader = DataLoader(
         dataset,
         batch_size=16,
-        sampler=FilewiseShuffleSampler(data_sizes=smapler_data_sizes),
+        sampler=FilewiseShuffleSampler(data_indices_in_files=data_indices_in_files),
     )
 
     for inputs, outputs in dataloader:
