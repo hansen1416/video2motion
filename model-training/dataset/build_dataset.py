@@ -55,19 +55,27 @@ class CustomProcess(Process):
 
     def read_mediapipe_data(self, animation_name, elevation, azimuth, n_frame):
 
-        file_path = f"{self.mediapipe_path}{animation_name}/{elevation}/{azimuth}/{n_frame}/world_landmarks.json"
-
         if self.source == "oss":
+
+            file_path = f"{self.mediapipe_path}/{animation_name}/{elevation}/{azimuth}/{n_frame}/world_landmarks.json"
+
             try:
                 landmarks_obj = self.bucket.get_object(file_path)
             except oss2.exceptions.NoSuchKey:
-                print(
-                    f"oss2.exceptions.NoSuchKey: {self.mediapipe_path}{animation_name}/{elevation}/{azimuth}/{n_frame}/world_landmarks.json"
-                )
+                print(f"oss2.exceptions.NoSuchKey: {file_path}")
                 return
 
             return json.loads(landmarks_obj.read())
         else:
+
+            file_path = os.path.join(
+                self.mediapipe_path,
+                animation_name,
+                str(elevation),
+                str(azimuth),
+                str(n_frame),
+                "world_landmarks.json",
+            )
 
             if not os.path.exists(file_path):
                 print(f"file not found at path: {file_path}")
@@ -78,19 +86,21 @@ class CustomProcess(Process):
 
     def read_anim_euler_data(self, animation_name):
 
-        file_path = f"{self.anim_euler_path}{animation_name}"
-
         if self.source == "oss":
+
+            file_path = f"{self.anim_euler_path}/{animation_name}"
+
             try:
                 anim_euler_obj = self.bucket.get_object(file_path)
             except oss2.exceptions.NoSuchKey:
-                print(
-                    f"oss2.exceptions.NoSuchKey: {self.anim_euler_path}{animation_name}"
-                )
+                print(f"oss2.exceptions.NoSuchKey: {file_path}")
                 return
 
             return json.loads(anim_euler_obj.read())
         else:
+
+            file_path = os.path.join(self.anim_euler_path, animation_name)
+
             if not os.path.exists(file_path):
                 print(f"file not found at path: {file_path}")
                 return
@@ -195,15 +205,27 @@ if __name__ == "__main__":
     )
 
     humanoid_name = "dors.glb"
-    mediapipe_path = f"mediapipe/{humanoid_name}/"
-    anim_euler_path = f"anim-json-euler/"
+    mediapipe_path = f"mediapipe/{humanoid_name}"
+    anim_euler_path = f"anim-json-euler"
+
+    mediapipe_path_local = os.path.join(
+        os.path.dirname(__file__), "..", "mediapipe", "results", humanoid_name
+    )
+    anim_euler_path_local = os.path.join(
+        os.path.dirname(__file__),
+        "..",
+        "..",
+        "anim-player",
+        "public",
+        "anim-json-euler",
+    )
 
     processes = [
         CustomProcess(
             queue_file_path=os.path.join(queue_dir, f"queue{i}.json"),
-            mediapipe_path=mediapipe_path,
-            anim_euler_path=anim_euler_path,
-            source="oss",
+            mediapipe_path=mediapipe_path_local,
+            anim_euler_path=anim_euler_path_local,
+            source="local",
             size_limit=100,
         )
         for i in queue_nums
