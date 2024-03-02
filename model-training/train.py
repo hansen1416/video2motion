@@ -8,31 +8,67 @@ from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 
 from MediapipeTransferLinear import MediapipeTransferLinear
-from dataset import DATA_DIR, 
+from dataset import (
+    DATA_DIR,
+    MediapipeDataset,
+    FilewiseShuffleSampler,
+    fetch_datatset_info,
+)
 
 
 if __name__ == "__main__":
 
-    inputs_dir = os.path.join(os.path.dirname(__file__), "data", "inputs")
-    outputs_dir = os.path.join(os.path.dirname(__file__), "data", "outputs")
-
-    dataset = MediapipeDataset(
-        os.path.join(DATA_DIR, "inputs_queue0.npy"),
-        os.path.join(DATA_DIR, "outputs_queue0.npy"),
+    inputs_dir_train = os.path.join(
+        os.path.dirname(__file__), "dataset", "data", "inputs"
+    )
+    outputs_dir_train = os.path.join(
+        os.path.dirname(__file__), "dataset", "data", "outputs"
     )
 
-    # Define the split ratio (e.g., 80% for training, 20% for testing)
-    train_size = int(0.8 * len(dataset))
-    test_size = len(dataset) - train_size
+    # Fetch the dataset info
+    indices_to_file_index_train, data_indices_in_files_train = fetch_datatset_info(
+        inputs_dir_train, outputs_dir_train
+    )
 
-    # Split the dataset into training and testing sets
-    train_dataset, test_dataset = torch.utils.data.random_split(
-        dataset, [train_size, test_size]
+    train_dataset = MediapipeDataset(
+        inputs_dir_train,
+        outputs_dir_train,
+        indices_to_file_index_train,
+        data_indices_in_files_train,
+        device="cpu",
+    )
+
+    inputs_dir_test = os.path.join(
+        os.path.dirname(__file__),
+        "dataset",
+        "data",
+        "test",
+        "inputs",
+    )
+    outputs_dir_test = os.path.join(
+        os.path.dirname(__file__),
+        "dataset",
+        "data",
+        "test",
+        "outputs",
+    )
+
+    # Fetch the dataset info
+    indices_to_file_index_test, data_indices_in_files_test = fetch_datatset_info(
+        inputs_dir_test, outputs_dir_test
+    )
+
+    test_dataset = MediapipeDataset(
+        inputs_dir_test,
+        outputs_dir_test,
+        indices_to_file_index_test,
+        data_indices_in_files_test,
+        device="cpu",
     )
 
     # get the first item from the dataset
-    # landmarks, rotations = train_dataset[0]
-    # print(landmarks.shape, rotations.shape)
+
+    print(len(train_dataset), len(test_dataset))
 
     # Assuming you have your CustomDataset class defined
 
