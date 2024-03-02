@@ -8,7 +8,7 @@ from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 
 from MediapipeTransferLinear import MediapipeTransferLinear
-from dataset import DATA_DIR, MediapipeDataset
+from dataset import DATA_DIR, 
 
 
 if __name__ == "__main__":

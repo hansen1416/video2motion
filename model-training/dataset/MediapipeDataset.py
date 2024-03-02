@@ -139,6 +139,7 @@ def fetch_datatset_info(inputs_dir, outputs_dir) -> Tuple[Dict, List]:
 if __name__ == "__main__":
 
     from torch.utils.data import DataLoader
+    from FilewiseShuffleSampler import FilewiseShuffleSampler
 
     inputs_dir = os.path.join(os.path.dirname(__file__), "data", "inputs")
     outputs_dir = os.path.join(os.path.dirname(__file__), "data", "outputs")
