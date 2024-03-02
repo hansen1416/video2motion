@@ -94,6 +94,12 @@ if __name__ == "__main__":
     inputs_dir = os.path.join(os.path.dirname(__file__), "data", "inputs")
     outputs_dir = os.path.join(os.path.dirname(__file__), "data", "outputs")
 
+    if not os.path.exists(inputs_dir):
+        os.makedirs(inputs_dir)
+
+    if not os.path.exists(outputs_dir):
+        os.makedirs(outputs_dir)
+
     file_idx = 0
     indices_to_file_index = {}
     accumulated_count = 0
