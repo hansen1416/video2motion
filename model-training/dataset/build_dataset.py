@@ -226,7 +226,7 @@ if __name__ == "__main__":
             mediapipe_path=mediapipe_path_local,
             anim_euler_path=anim_euler_path_local,
             source="local",
-            size_limit=100,
+            size_limit=None,
         )
         for i in queue_nums
     ]

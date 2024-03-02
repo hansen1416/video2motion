@@ -61,7 +61,7 @@ class MediapipeDataset(Dataset):
             self.current_outputs, dtype=torch.float32
         ).to(self.device)
 
-        print(f"loaded file {file_idx}")
+        # print(f"loaded file {file_idx}")
 
     def __getitem__(self, idx) -> Tuple[torch.Tensor, torch.Tensor]:
         """
@@ -129,10 +129,6 @@ if __name__ == "__main__":
         data_indices_in_files,
         device="cpu",
     )
-
-    for i in range(len(dataset)):
-        inputs, outputs = dataset[i]
-        print(inputs.shape, outputs.shape)
 
     dataloader = DataLoader(
         dataset,
