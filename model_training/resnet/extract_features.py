@@ -9,6 +9,25 @@ from PIL import Image
 from torchvision import transforms
 from torchvision.models import resnet18, ResNet18_Weights, resnet50, ResNet50_Weights
 
+if __name__ == "__main__":
+
+    screen_shot_dir = os.path.join(
+        os.path.dirname(__file__),
+        "..",
+        "..",
+        "video-recorder",
+        "data",
+    )
+
+    humanoid_name = "dors.glb"
+
+    for f in os.listdir(os.path.join(screen_shot_dir, humanoid_name)):
+        print(f)
+
+        break
+
+    exit()
+
 # model = torch.hub.load(
 #     "pytorch/vision:v0.10.0", "resnet50", weights=ResNet50_Weights.DEFAULT
 # )
